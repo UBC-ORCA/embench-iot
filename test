@@ -8,7 +8,7 @@
 
 //for the simulation 
 #include <string.h>
-// #include "support.h"
+//#include "support.h"
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -57,8 +57,9 @@ const short* random_array(){
 /*****************************************************
 *			Dot Product	      *
 *****************************************************/
+//try to change the long int sqr
 long int
-mac (const short *a, const short *b, long int sqr, long int *sum)
+mac (const short *a, const short *b, long int sqmul, long int *sum)
 {
   long int i;
   long int dotp = *sum;
@@ -66,11 +67,11 @@ mac (const short *a, const short *b, long int sqr, long int *sum)
   for (i = 0; i < 150; i++)
     {
       dotp += b[i] * a[i];
-      sqr += b[i] * b[i];
+      sqmul += b[i] * b[i];
     }
 
   *sum = dotp;
-  return sqr;
+  return sqmul;
 }
 
 int main(){
@@ -83,13 +84,13 @@ int main(){
     const short* a = random_array();
     const short* b = random_array();
 
-    long int sqr, *sum;
+    long int sqmul, *sum;
     
 
-    sqr = mac(*a, *b, sqr, *sum);
+    sqmul = mac(*a, *b, sqmul, *sum);
     // check the doit multiplcaition is correct by making a benchmark 
     // the initial runtime test implementation?
-    printf(sqr);
+    printf(sqmul);
 
     free(a);
     free(b);
