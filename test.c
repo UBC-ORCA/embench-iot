@@ -86,7 +86,7 @@ int main(){
 
     long int sqr, *sum;
     sum = malloc(sizeof(long int));
-    sum = 0;
+    *sum = 0;
 
     sqr = mac(a, b, sqr, sum);
     // check the doit multiplcaition is correct by making a benchmark 
