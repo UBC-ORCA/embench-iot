@@ -44,7 +44,7 @@ void vec_mpy1 (short y[], const short x[], short scaler)
 short* random_array_short(){
     short * A_short = calloc(n+1, sizeof(short));
     for (int i = 0; i< 150 ; i++){
-        A_short[i] = rand()%5;
+        A_short[i] = rand()%100;
     }
     return A_short;
 
@@ -52,7 +52,7 @@ short* random_array_short(){
 long int* random_array_long(){
     long int  * A_long = calloc(ORDER, sizeof(long));
     for (int i = 0; i<ORDER ; i++){
-        A_long[i] = rand()%5;
+        A_long[i] = rand()%100;
     }
     return A_long;
 
@@ -85,7 +85,14 @@ mac (short *a,short *b, long int sqr, long int *sum)
 
 
 // function to print out the array 
-void print_array(long int* A){
+void print_array_long(long int* A){
+     for (int i = 0; i < N - ORDER; i++){
+      printf("%ld", A[i]);
+     }
+    printf("\n");
+}
+
+void print_array_short(short int* A){
      for (int i = 0; i < N - ORDER; i++){
       printf("%ld", A[i]);
      }
@@ -167,7 +174,9 @@ int main(){
     
     long* output_fir = random_array_long();
     fir(array1, coeff,output_fir);
-    print_array(output_fir); 
+    print_array_short(array1);
+    print_array_short(coeff);
+    print_array_long(output_fir); 
     printf("The test is shown as above\n");
      
     //----------------------to test the mac--------------//
