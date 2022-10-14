@@ -20,7 +20,7 @@
 
 void vec_mpy1 (short y[], const short x[], short scaler);
 long int mac ( short *a,  short *b, long int sqr, long int *sum) ;
-//void fir (const short array1[], const short coeff[], long int output[]);
+long int* fir (const short array1[], const short coeff[], long int output[]);
 //void fir_no_red_ld (const short x[], const short h[], long int y[]);
 //long int latsynth (short b[], const short k[], long int n, long int f);
 //void iir1 (const short *coefs, const short *input, long int *optr,
@@ -58,6 +58,7 @@ short* random_array(){
 *			Dot Product	      *
 *****************************************************/
 //try to change the long int sqr
+// change the const short into short pointer 
 long int
 mac (short *a,short *b, long int sqr, long int *sum)
 {
@@ -74,6 +75,77 @@ mac (short *a,short *b, long int sqr, long int *sum)
   return sqr;
 }
 
+
+// function to print out the array 
+void print_array(long int* A){
+     for (int i = 0; i < N - ORDER; i++){
+      printf("%ld", A[i]);
+     }
+    printf("\n");
+}
+
+
+
+/*****************************************************
+*		FIR Filter		     *
+*****************************************************/
+long int* fir (const short array1[], const short coeff[], long int* output[])
+{
+  long int i, j, sum;
+
+  for (i = 0; i < N - ORDER; i++)
+    {
+      sum = 0;
+      for (j = 0; j < ORDER; j++)
+	      {
+	         sum += array1[i + j] * coeff[j];
+	      }
+      output[i] = sum >> 15; // the output would have divided by 15*4
+      
+    }
+    return output;
+
+}
+// FIR 
+// the filtered amplitude would be coeff[j]
+// the total element in the array would be #ORDER defined as 50 
+// output array would have 50 element, where the sum is generated everytime
+
+
+/****************************************************
+*	FIR Filter with Redundant Load Elimination
+
+By doing two outer loops simultaneously, you can potentially  reuse data (depending on the DSP architecture).
+x and h  only  need to be loaded once, therefore reducing redundant loads.
+This reduces memory bandwidth and power.
+*****************************************************/
+void
+fir_no_red_ld (const short x[], const short h[], long int y[])
+{
+  long int i, j;
+  long int sum0, sum1;
+  short x0, x1, h0, h1;
+  for (j = 0; j < 100; j += 2)
+    {
+      sum0 = 0;
+      sum1 = 0;
+      x0 = x[j];
+      for (i = 0; i < 32; i += 2)
+	{
+	  x1 = x[j + i + 1];
+	  h0 = h[i];
+	  sum0 += x0 * h0;
+	  sum1 += x1 * h0;
+	  x0 = x[j + i + 2];
+	  h1 = h[i + 1];
+	  sum0 += x1 * h1;
+	  sum1 += x0 * h1;
+	}
+      y[j] = sum0 >> 15;
+      y[j + 1] = sum1 >> 15;
+    }
+}
+
 int main(){
     
    // init_runtime();
@@ -81,20 +153,29 @@ int main(){
     // assign the values for a and b 
     //generate random array 
     
-    short* a = random_array();
-    short* b = random_array();
+    //-------------------------to test the fir------------//
+    short* array1 = random_array();
+    short* coeff = random_array();
+    
+    long int output_fir[50] = fir(array1, coeff,output_fir);
+    print_array(output_fir);
 
-    long int sqr, *sum;
-    sum = malloc(sizeof(long int));
-    *sum = 0;
+    
 
-    sqr = mac(a, b, sqr, sum);
+    
+
+    //----------------------to test the mac--------------//
+    //short* a = random_array();
+    //short* b = random_array();
+    //long int sqr, *sum;
+    //sum = malloc(sizeof(long int));
+    //*sum = 0;
+    //sqr = mac(a, b, sqr, sum);
     // check the doit multiplcaition is correct by making a benchmark 
     // the initial runtime test implementation?
-    printf("sqr equals to %ld", sqr);
-
-    free(a);
-    free(b);
+    //printf("sqr equals to %ld", sqr);
+    //free(a);
+    //free(b);
     
     return 0;
 
