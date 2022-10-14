@@ -162,6 +162,26 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
     return y;
 }
 
+/*******************************************************
+*	Lattice Synthesis	           *
+* This function doesn't follow the typical DSP multiply two vector operation, but it will point out the compiler's flexibility   ********************************************************/
+long int
+latsynth (short b[], const short k[], long int n, long int f)
+{
+  long int i;
+
+  f -= b[n - 1] * k[n - 1]; 
+  for (i = n - 2; i >= 0; i--)
+    {
+      f -= b[i] * k[i];
+      b[i + 1] = b[i] + ((k[i] * (f >> 16)) >> 16);
+    }
+  b[0] = f >> 16;
+  return f;
+}
+
+
+
 int main(){
     
    // init_runtime();
@@ -169,29 +189,6 @@ int main(){
     // assign the values for a and b 
     //generate random array 
     
-    // //-------------------------to test the fir------------//
-    // short* array1 = random_array_short();
-    // short* coeff = random_array_short();
-    
-    // long* output_fir = random_array_long();
-    // fir(array1, coeff,output_fir);
-    // print_array_short(array1);
-    // print_array_short(coeff);
-    // print_array_long(output_fir); 
-    // printf("The test is shown as above\n");
-     
-     //-------------------------to test the fir_no_red_ld------------//
-    short* array1 = random_array_short();
-    short* coeff = random_array_short();
-    
-    long* output_fir = random_array_long();
-    fir_no_red_ld(array1, coeff,output_fir);
-    //fir(array1, coeff,output_fir);
-    print_array_short(array1);
-    print_array_short(coeff);
-    print_array_long(output_fir); 
-    printf("The test is shown as above\n");
-     
     //----------------------to test the mac--------------//
     //short* a = random_array();
     //short* b = random_array();
@@ -204,6 +201,37 @@ int main(){
     //printf("sqr equals to %ld", sqr);
     //free(a);
     //free(b);
+
+    // //-------------------------to test the fir------------//
+    // short* array1 = random_array_short();
+    // short* coeff = random_array_short();
+    
+    // long* output_fir = random_array_long();
+    // fir(array1, coeff,output_fir);
+    // print_array_short(array1);
+    // print_array_short(coeff);
+    // print_array_long(output_fir); 
+    // printf("The test is shown as above\n");
+     
+     //-------------------------to test the fir_no_red_ld------------//
+    // short* array1 = random_array_short();
+    // short* coeff = random_array_short();
+    
+    // long* output_fir = random_array_long();
+    // fir_no_red_ld(array1, coeff,output_fir);
+    // print_array_short(array1);
+    // print_array_short(coeff);
+    // print_array_long(output_fir); 
+    // printf("The test is shown as above\n");
+     
+    //-------------------to test the latsynth-------------------//
+     short* b = random_array_short();
+     short* k = random_array_short();
+     long int f;
+
+     f = latsynth(b,k,n,f);
+     printf("%ld",f);
+
     
     return 0;
 
