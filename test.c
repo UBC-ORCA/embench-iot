@@ -41,12 +41,20 @@ void vec_mpy1 (short y[], const short x[], short scaler)
 
 // help generating a random array 
 
-short* random_array(){
-    short * A = calloc(n+1, sizeof(short));
-    for (int i = 0; i<150 ; i++){
-        A[i] = rand()%5;
+short* random_array_short(){
+    short * A_short = calloc(n+1, sizeof(short));
+    for (int i = 0; i< 150 ; i++){
+        A_short[i] = rand()%5;
     }
-    return A;
+    return A_short;
+
+}
+long int* random_array_long(){
+    long int  * A_long = calloc(ORDER, sizeof(long));
+    for (int i = 0; i<ORDER ; i++){
+        A_long[i] = rand()%5;
+    }
+    return A_long;
 
 }
 
@@ -89,7 +97,7 @@ void print_array(long int* A){
 /*****************************************************
 *		FIR Filter		     *
 *****************************************************/
-long int* fir (const short array1[], const short coeff[], long int* output[])
+long int* fir (const short array1[], const short coeff[], long int output[])
 {
   long int i, j, sum;
 
@@ -154,16 +162,14 @@ int main(){
     //generate random array 
     
     //-------------------------to test the fir------------//
-    short* array1 = random_array();
-    short* coeff = random_array();
+    short* array1 = random_array_short();
+    short* coeff = random_array_short();
     
-    long int output_fir[50] = fir(array1, coeff,output_fir);
-    print_array(output_fir);
-
-    
-
-    
-
+    long* output_fir = random_array_long();
+    fir(array1, coeff,output_fir);
+    print_array(output_fir); 
+    printf("The test is shown as above\n");
+     
     //----------------------to test the mac--------------//
     //short* a = random_array();
     //short* b = random_array();
