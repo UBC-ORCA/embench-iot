@@ -134,7 +134,7 @@ By doing two outer loops simultaneously, you can potentially  reuse data (depend
 x and h  only  need to be loaded once, therefore reducing redundant loads.
 This reduces memory bandwidth and power.
 *****************************************************/
-void
+long int*
 fir_no_red_ld (const short x[], const short h[], long int y[])
 {
   long int i, j;
@@ -159,6 +159,7 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
       y[j] = sum0 >> 15;
       y[j + 1] = sum1 >> 15;
     }
+    return y;
 }
 
 int main(){
@@ -168,12 +169,23 @@ int main(){
     // assign the values for a and b 
     //generate random array 
     
-    //-------------------------to test the fir------------//
+    // //-------------------------to test the fir------------//
+    // short* array1 = random_array_short();
+    // short* coeff = random_array_short();
+    
+    // long* output_fir = random_array_long();
+    // fir(array1, coeff,output_fir);
+    // print_array_short(array1);
+    // print_array_short(coeff);
+    // print_array_long(output_fir); 
+    // printf("The test is shown as above\n");
+     
+     //-------------------------to test the fir_no_red_ld------------//
     short* array1 = random_array_short();
     short* coeff = random_array_short();
     
     long* output_fir = random_array_long();
-    fir(array1, coeff,output_fir);
+    fir_no_red_ld(array1, coeff,output_fir);
     print_array_short(array1);
     print_array_short(coeff);
     print_array_long(output_fir); 
