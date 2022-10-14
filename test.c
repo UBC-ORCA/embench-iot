@@ -21,7 +21,7 @@
 void vec_mpy1 (short y[], const short x[], short scaler);
 long int mac ( short *a,  short *b, long int sqr, long int *sum) ;
 long int* fir (const short array1[], const short coeff[], long int output[]);
-//void fir_no_red_ld (const short x[], const short h[], long int y[]);
+long int* fir_no_red_ld (const short x[], const short h[], long int y[]);
 //long int latsynth (short b[], const short k[], long int n, long int f);
 //void iir1 (const short *coefs, const short *input, long int *optr,
 //	   long int *state);
@@ -186,6 +186,7 @@ int main(){
     
     long* output_fir = random_array_long();
     fir_no_red_ld(array1, coeff,output_fir);
+    //fir(array1, coeff,output_fir);
     print_array_short(array1);
     print_array_short(coeff);
     print_array_long(output_fir); 
