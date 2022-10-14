@@ -20,7 +20,7 @@
 
 void vec_mpy1 (short y[], const short x[], short scaler);
 long int mac ( short *a,  short *b, long int sqr, long int *sum) ;
-void fir (const short array1[], const short coeff[], long int output[]);
+long int* fir (const short array1[], const short coeff[], long int output[]);
 //void fir_no_red_ld (const short x[], const short h[], long int y[]);
 //long int latsynth (short b[], const short k[], long int n, long int f);
 //void iir1 (const short *coefs, const short *input, long int *optr,
@@ -75,11 +75,21 @@ mac (short *a,short *b, long int sqr, long int *sum)
   return sqr;
 }
 
+
+// function to print out the array 
+void print_array(long int* A){
+     for (int i = 0; i < N - ORDER; i++){
+      printf("%ld", A[i]);
+     }
+    printf("\n");
+}
+
+
+
 /*****************************************************
 *		FIR Filter		     *
 *****************************************************/
-void
-fir (const short array1[], const short coeff[], long int output[])
+long int* fir (const short array1[], const short coeff[], long int* output[])
 {
   long int i, j, sum;
 
@@ -93,6 +103,8 @@ fir (const short array1[], const short coeff[], long int output[])
       output[i] = sum >> 15; // the output would have divided by 15*4
       
     }
+    return output;
+
 }
 // FIR 
 // the filtered amplitude would be coeff[j]
@@ -141,20 +153,29 @@ int main(){
     // assign the values for a and b 
     //generate random array 
     
-    short* a = random_array();
-    short* b = random_array();
+    //-------------------------to test the fir------------//
+    short* array1 = random_array();
+    short* coeff = random_array();
+    
+    long int output_fir[50] = fir(array1, coeff,output_fir);
+    print_array(output_fir);
 
-    long int sqr, *sum;
-    sum = malloc(sizeof(long int));
-    *sum = 0;
+    
 
-    sqr = mac(a, b, sqr, sum);
+    
+
+    //----------------------to test the mac--------------//
+    //short* a = random_array();
+    //short* b = random_array();
+    //long int sqr, *sum;
+    //sum = malloc(sizeof(long int));
+    //*sum = 0;
+    //sqr = mac(a, b, sqr, sum);
     // check the doit multiplcaition is correct by making a benchmark 
     // the initial runtime test implementation?
-    printf("sqr equals to %ld", sqr);
-
-    free(a);
-    free(b);
+    //printf("sqr equals to %ld", sqr);
+    //free(a);
+    //free(b);
     
     return 0;
 
