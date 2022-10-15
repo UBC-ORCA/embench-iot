@@ -165,10 +165,12 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
 /*******************************************************
 *	Lattice Synthesis	           *
 * This function doesn't follow the typical DSP multiply two vector operation, but it will point out the compiler's flexibility   ********************************************************/
+//edited to remove the long int n and f
 long int
-latsynth (short b[], const short k[], long int n, long int f)
+latsynth (short b[], const short k[])
 {
   long int i;
+  long int f;
 
   f -= b[n - 1] * k[n - 1]; 
   for (i = n - 2; i >= 0; i--)
@@ -227,10 +229,11 @@ int main(){
     //-------------------to test the latsynth-------------------//
      short* b = random_array_short();
      short* k = random_array_short();
-     long int f;
+     long int g;
+     //long int f;
 
-     f = latsynth(b,k,n,f);
-     printf("%ld",f);
+     g = latsynth(b,k);
+     printf("%ld",g);
 
     
     return 0;
