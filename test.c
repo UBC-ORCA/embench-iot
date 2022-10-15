@@ -21,7 +21,7 @@
 void vec_mpy1 (short y[], const short x[], short scaler);
 long int mac ( short *a,  short *b, long int sqr, long int *sum) ;
 long int* fir (const short array1[], const short coeff[], long int output[]);
-long int* fir_no_red_ld (const short x[], const short h[], long int y[]);
+//void fir_no_red_ld (const short x[], const short h[], long int y[]);
 //long int latsynth (short b[], const short k[], long int n, long int f);
 //void iir1 (const short *coefs, const short *input, long int *optr,
 //	   long int *state);
@@ -165,12 +165,10 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
 /*******************************************************
 *	Lattice Synthesis	           *
 * This function doesn't follow the typical DSP multiply two vector operation, but it will point out the compiler's flexibility   ********************************************************/
-//edited to remove the long int n and f
 long int
-latsynth (short b[], const short k[])
+latsynth (short b[], const short k[], long int n, long int f)
 {
   long int i;
-  long int f;
 
   f -= b[n - 1] * k[n - 1]; 
   for (i = n - 2; i >= 0; i--)
@@ -182,6 +180,28 @@ latsynth (short b[], const short k[])
   return f;
 }
 
+/*****************************************************
+*			IIR Filter		     *
+*****************************************************/
+void
+iir1 (const short *coefs, const short *input, long int *optr, long int *state)
+{
+  long int x;
+  long int t;
+  long int n;
+
+  x = input[0];
+  for (n = 0; n < 50; n++)
+    {
+      t = x + ((coefs[2] * state[0] + coefs[3] * state[1]) >> 15);
+      x = t + ((coefs[0] * state[0] + coefs[1] * state[1]) >> 15);
+      state[1] = state[0];
+      state[0] = t;
+      coefs += 4;		/* point to next filter coefs  */
+      state += 2;		/* point to next filter states */
+    }
+  *optr++ = x;
+}
 
 
 int main(){
@@ -227,15 +247,29 @@ int main(){
     // printf("The test is shown as above\n");
      
     //-------------------to test the latsynth-------------------//
-     short* b = random_array_short();
-     short* k = random_array_short();
-     long int g;
-     //long int f;
+    //  short* b = random_array_short();
+    //  short* k = random_array_short();
+    //  long int f;
 
-     g = latsynth(b,k);
-     printf("%ld",g);
+    //  f = latsynth(b,k,n,f);
+    //  printf("%ld",f);
 
-    
+   //------------------to test the iir1----------------------//
+      short* coefs = random_array_short();
+      short* input = random_array_short();
+      long*  optr = random_array_long();
+      long*  state = random_array_long();
+      
+      iir1(coefs, input,optr, state);
+      
+      printf("this is array1\n");
+      print_array_short(array1);
+      printf("this is coeff\n");
+      print_array_short(coeff);
+      printf("this is output_fir\n");
+      print_array_long(output_fir); 
+      printf("The test is shown as above\n");
+
     return 0;
 
 }
