@@ -166,9 +166,10 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
 *	Lattice Synthesis	           *
 * This function doesn't follow the typical DSP multiply two vector operation, but it will point out the compiler's flexibility   ********************************************************/
 long int
-latsynth (short b[], const short k[], long int n, long int f)
+latsynth (short b[], const short k[])
 {
   long int i;
+  long int f;
 
   f -= b[n - 1] * k[n - 1]; 
   for (i = n - 2; i >= 0; i--)
@@ -188,10 +189,10 @@ iir1 (const short *coefs, const short *input, long int *optr, long int *state)
 {
   long int x;
   long int t;
-  long int n;
+  long int n_new;
 
   x = input[0];
-  for (n = 0; n < 50; n++)
+  for (n_new = 0; n_new < 50; n_new++)
     {
       t = x + ((coefs[2] * state[0] + coefs[3] * state[1]) >> 15);
       x = t + ((coefs[0] * state[0] + coefs[1] * state[1]) >> 15);
@@ -262,12 +263,12 @@ int main(){
       
       iir1(coefs, input,optr, state);
       
-      printf("this is array1\n");
-      print_array_short(array1);
-      printf("this is coeff\n");
-      print_array_short(coeff);
-      printf("this is output_fir\n");
-      print_array_long(output_fir); 
+      printf("this is coefs\n");
+      print_array_short(coefs);
+      printf("this is input\n");
+      print_array_short(input);
+      printf("this is optr\n");
+      print_array_long(optr); 
       printf("The test is shown as above\n");
 
     return 0;
