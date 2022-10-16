@@ -13,8 +13,8 @@
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
 #define LOCAL_SCALE_FACTOR 87
-
-#define n 149
+#define CPU_MHZ 3.5*1000
+//#define n 149
 #define N 100
 #define ORDER 50
 
@@ -42,7 +42,7 @@ void vec_mpy1 (short y[], const short x[], short scaler)
 // help generating a random array 
 
 short* random_array_short(){
-    short * A_short = calloc(n+1, sizeof(short));
+    short * A_short = calloc(150, sizeof(short));
     for (int i = 0; i< 150 ; i++){
         A_short[i] = rand()%100;
     }
@@ -68,7 +68,7 @@ long int* random_array_long(){
 //try to change the long int sqr
 // change the const short into short pointer 
 long int
-mac (short *a,short *b, long int sqr, long int sqr,long int *sum)
+mac (short *a,short *b,  long int sqr,long int *sum)
 {
   long int i;
   long int dotp = *sum;
@@ -159,17 +159,16 @@ fir_no_red_ld (const short x[], const short h[], long int y[])
       y[j] = sum0 >> 15;
       y[j + 1] = sum1 >> 15;
     }
-    return y;
 }
 
 /*******************************************************
 *	Lattice Synthesis	           *
 * This function doesn't follow the typical DSP multiply two vector operation, but it will point out the compiler's flexibility   ********************************************************/
 long int
-latsynth (short b[], const short k[], long int n, long int f)
+latsynth (short b[], const short k[], long int n)
 {
   long int i;
-  //long int f;
+  long int f;
 
   f -= b[n - 1] * k[n - 1]; 
   for (i = n - 2; i >= 0; i--)
@@ -398,7 +397,7 @@ benchmark_body (int rpt)
       c = mac (a, b, (long int) c, (long int *) output);
       fir (a, b, output);
       fir_no_red_ld (a, b, output);
-      d = latsynth (a, b, N, d);
+      d = latsynth (a, b, N);
       iir1 (a, b, &output[100], output);
       e = codebook (d, 1, 17, e, d, a, c, 1);
       jpegdct (a, b);
