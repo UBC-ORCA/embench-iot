@@ -34,7 +34,15 @@
  *----------------------------------------------------------------------*/
 
 #include <string.h>
-#include "support.h"
+//#include "support.h"
+//just in case for the simulation 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <math.h>
+
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -44,6 +52,10 @@
 #define ZERO 0
 #define MOD_SIZE 8095
 typedef long matrix[UPPERLIMIT][UPPERLIMIT];
+
+//for simulation 
+#define CPU_MHZ 1
+
 
 int
 values_match (long v1, long v2)
@@ -261,6 +273,19 @@ verify_benchmark (int unused)
 
 /* vim: set ts=3 sw=3 et: */
 
+int main(){
+
+  int result;
+  int unused;
+  __attribute__ ((noinline));
+  initialise_benchmark ();
+  result = verify_benchmark(unused);
+
+  printf("the result is %d",result);
+
+  return 0;
+
+}
 
 /*
    Local Variables:

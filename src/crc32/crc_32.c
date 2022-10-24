@@ -50,6 +50,8 @@ typedef unsigned short WORD;
 /* Need an unsigned type capable of holding 32 bits; */
 
 typedef DWORD UNS_32_BITS;
+static long int seed = 0;
+
 
 /* Copyright (C) 1986 Gary S. Brown.  You may use this program, or
    code or tables extracted from it, as desired without restriction.*/
@@ -99,6 +101,23 @@ typedef DWORD UNS_32_BITS;
 
 /* The BEEBS version of this code uses its own version of rand, to
    avoid library/architecture variation. */
+
+int
+rand_beebs (void)
+{
+  seed = (seed * 1103515245L + 12345) & ((1UL << 31) - 1);
+  return (int) (seed >> 16);
+}
+
+
+/* Initialize the random number generator */
+
+void
+srand_beebs (unsigned int new_seed)
+{
+  seed = (long int) new_seed;
+}
+
 
 static const UNS_32_BITS crc_32_tab[] = {	/* CRC polynomial 0xedb88320 */
   0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
