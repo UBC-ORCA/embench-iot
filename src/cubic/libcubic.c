@@ -19,7 +19,9 @@
  **  CUBIC.C - Solve a cubic polynomial
  **  public domain by Ross Cottrell
  */
-
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <math.h>
 #include "snipmath.h"
 
@@ -34,6 +36,11 @@ SolveCubic (double a, double b, double c, double d, int *solutions, double *x)
   double R2_Q3 = (double) (R * R - Q * Q * Q);
 
   double theta;
+  
+  printf("Q is %ld\n",Q);
+  printf("R is %ld\n",R );
+  printf("R2_Q3 is %ld\n",R2_Q3);
+
 
   if (R2_Q3 <= 0)
     {
@@ -54,6 +61,40 @@ SolveCubic (double a, double b, double c, double d, int *solutions, double *x)
       x[0] -= (double) (a1 / 3.0L);
     }
 }
+
+int main(){
+  double a =  rand()%5;
+  double b =  rand()%5;
+  double c =  rand()%5;
+  double d =  rand()%5;
+  
+  int *solutions;
+  solutions = malloc(sizeof(int));
+  
+  // int array_size;
+  // array_size = 3;
+
+  double *x;
+  x = malloc(sizeof(double));
+  
+
+
+  SolveCubic (a, b, c, d, solutions, x);
+
+  printf("a is %lf\n",a);
+  printf("b is %lf\n",b);
+  printf("c is %lf\n",c);
+  printf("d is %lf\n",d);
+
+
+  printf("solutions is %lf\n",*solutions);
+  printf("x is %lf\n",*x);
+  
+  //, b is %lf, c is %lf, d is %lf,solution is %ld, x is %lf", a, b, c, d, *solutions, *x );
+  return 0;
+
+}
+
 
 /* vim: set ts=3 sw=3 et: */
 
