@@ -63,6 +63,11 @@ static char heap[HEAP_SIZE] __attribute__((aligned));
 //for simulation 
 #define CPU_MHZ 1
 
+static void *heap_ptr = NULL;
+static void *heap_end = NULL;
+static size_t  heap_requested = 0;
+
+
 #define TEST_SIZE 500
 
 typedef unsigned long bits32;
@@ -124,6 +129,27 @@ static const byte orig_data[TEST_SIZE] = {
 
 static byte test_data[TEST_SIZE];
 
+
+void free_beebs(void *ptr __attribute__((unused)))
+{
+
+}
+
+void *
+malloc_beebs (size_t size)
+{
+  void *new_ptr = heap_ptr;
+
+  heap_requested += size;
+
+  if (((void *) ((char *) heap_ptr + size) > heap_end) || (0 == size))
+    return NULL;
+  else
+    {
+      heap_ptr = (void *) ((char *) heap_ptr + size);
+      return new_ptr;
+    }
+}
 
 // utility function for processing compression trie
 static void
