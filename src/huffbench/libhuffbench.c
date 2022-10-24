@@ -48,7 +48,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "support.h"
+//#include "support.h"
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -58,6 +58,15 @@
 
 #define HEAP_SIZE 8192
 static char heap[HEAP_SIZE] __attribute__((aligned));
+//Aligned is not defined 
+
+//for simulation 
+#define CPU_MHZ 1
+
+static void *heap_ptr = NULL;
+static void *heap_end = NULL;
+static size_t  heap_requested = 0;
+
 
 #define TEST_SIZE 500
 
@@ -120,6 +129,27 @@ static const byte orig_data[TEST_SIZE] = {
 
 static byte test_data[TEST_SIZE];
 
+
+void free_beebs(void *ptr __attribute__((unused)))
+{
+
+}
+
+void *
+malloc_beebs (size_t size)
+{
+  void *new_ptr = heap_ptr;
+
+  heap_requested += size;
+
+  if (((void *) ((char *) heap_ptr + size) > heap_end) || (0 == size))
+    return NULL;
+  else
+    {
+      heap_ptr = (void *) ((char *) heap_ptr + size);
+      return new_ptr;
+    }
+}
 
 // utility function for processing compression trie
 static void
@@ -480,6 +510,16 @@ benchmark (void)
   return benchmark_body (LOCAL_SCALE_FACTOR * CPU_MHZ);
 }
 
+//added for the simulation 
+void
+init_heap_beebs (void *heap, size_t heap_size)
+{
+  heap_ptr = (void *) heap;
+  heap_end = (void *) ((char *) heap_ptr + heap_size);
+  heap_requested = 0;
+}
+
+
 
 static int __attribute__ ((noinline)) benchmark_body (int rpt)
 {
@@ -498,4 +538,16 @@ static int __attribute__ ((noinline)) benchmark_body (int rpt)
 
   // done
   return 0;
+}
+
+int main (){
+  int result;
+  int unused;
+  __attribute__ ((noinline));
+  result = verify_benchmark(unused);
+
+  printf("the result is %d",result);
+
+  return 0;
+
 }
