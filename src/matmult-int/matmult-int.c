@@ -261,6 +261,19 @@ verify_benchmark (int unused)
 
 /* vim: set ts=3 sw=3 et: */
 
+int main(){
+
+  int result;
+  int unused;
+  __attribute__ ((noinline));
+  initialise_benchmark ();
+  result = verify_benchmark(unused);
+
+  printf("the result is %d",result);
+
+  return 0;
+
+}
 
 /*
    Local Variables:
