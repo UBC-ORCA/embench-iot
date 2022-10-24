@@ -34,7 +34,15 @@
  *----------------------------------------------------------------------*/
 
 #include <string.h>
-#include "support.h"
+//#include "support.h"
+//just in case for the simulation 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <math.h>
+
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -44,6 +52,10 @@
 #define ZERO 0
 #define MOD_SIZE 8095
 typedef long matrix[UPPERLIMIT][UPPERLIMIT];
+
+//for simulation 
+#define CPU_MHZ 1
+
 
 int
 values_match (long v1, long v2)
