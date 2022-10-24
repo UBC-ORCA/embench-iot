@@ -48,7 +48,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "support.h"
+//#include "support.h"
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -58,6 +58,10 @@
 
 #define HEAP_SIZE 8192
 static char heap[HEAP_SIZE] __attribute__((aligned));
+//Aligned is not defined 
+
+//for simulation 
+#define CPU_MHZ 1
 
 #define TEST_SIZE 500
 
@@ -480,6 +484,16 @@ benchmark (void)
   return benchmark_body (LOCAL_SCALE_FACTOR * CPU_MHZ);
 }
 
+//added for the simulation 
+void
+init_heap_beebs (void *heap, size_t heap_size)
+{
+  heap_ptr = (void *) heap;
+  heap_end = (void *) ((char *) heap_ptr + heap_size);
+  heap_requested = 0;
+}
+
+
 
 static int __attribute__ ((noinline)) benchmark_body (int rpt)
 {
@@ -498,4 +512,16 @@ static int __attribute__ ((noinline)) benchmark_body (int rpt)
 
   // done
   return 0;
+}
+
+int main (){
+  int result;
+  int unused;
+  __attribute__ ((noinline));
+  result = verify_benchmark(unused);
+
+  printf("the result is %d",result);
+
+  return 0;
+
 }
