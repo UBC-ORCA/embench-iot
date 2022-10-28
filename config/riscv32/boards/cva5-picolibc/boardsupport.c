@@ -13,8 +13,12 @@
 #define TX_BUFFER_EMPTY 0x00000020
 #define RX_HAS_DATA 	0x00000001
 
-#define UART_RX_TX_REG 0x60001000
+#define UART_RX_TX_REG  0x60001000
+#define UART_DLL_REG    0x60001000
+#define UART_DLM_REG    0x60001000
+#define LINE_CONTROL_REG_ADDR	(UART_RX_TX_REG + 0x0C)
 #define LINE_STATUS_REG_ADDR	(UART_RX_TX_REG + 0x14)
+#define LINE_CONTROL_REG_DLAB   0x00000080
 
 unsigned long long begin_time, end_time, user_time;
 unsigned long long start_instruction_count, end_instruction_count, user_instruction_count;
@@ -38,6 +42,51 @@ static int input_char(FILE *file)
   while (!((*(unsigned char *)LINE_STATUS_REG_ADDR) & RX_HAS_DATA));
 
   return *((unsigned char*)UART_RX_TX_REG);
+}
+
+// Adapted from XilinxProcessorIPLib/drivers/uartns550/src/xuartns550_l.c
+static void set_uart_baudrate(int InputClockHz, int BaudRate)
+{
+    int BaudLSB;
+    int BaudMSB;
+    int LcrRegister;
+    int Divisor;
+
+    /*
+     * Determine what the divisor should be to get the specified baud
+     * rater based upon the input clock frequency and a baud clock prescaler
+     * of 16
+     */
+    Divisor = ((InputClockHz +((BaudRate * 16UL)/2)) /
+                    (BaudRate * 16UL));
+    /*
+     * Get the least significant and most significant bytes of the divisor
+     * so they can be written to 2 byte registers
+     */
+    BaudLSB = Divisor & 0xFF;
+    BaudMSB = (Divisor >> 8) & 0xFF;
+
+    /*
+     * Get the line control register contents and set the divisor latch
+     * access bit so the baud rate can be set
+     */
+    LcrRegister = *((unsigned char*)LINE_CONTROL_REG_ADDR);
+    *(unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) ( LcrRegister | LINE_CONTROL_REG_DLAB);
+
+    /*
+     * Set the baud Divisors to set rate, the initial write of 0xFF is to
+     * keep the divisor from being 0 which is not recommended as per the
+     * NS16550D spec sheet
+     */
+    *(unsigned char*)UART_DLL_REG = (unsigned char) 0xFF;
+    *(unsigned char*)UART_DLM_REG = (unsigned char) BaudMSB;
+    *(unsigned char*)UART_DLL_REG = (unsigned char) BaudLSB;
+
+    /*
+     * Clear the Divisor latch access bit, DLAB to allow nornal
+     * operation and write to the line control register
+     */
+    *(unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) LcrRegister;
 }
 
 
@@ -107,6 +156,8 @@ unsigned long long  read_inst()
 void
 initialise_board ()
 {
+  // 100 MHz clock and 115200 bauds
+  set_uart_baudrate(100000000, 115200);
   __asm__ volatile ("li a0, 0" : : : "memory");
 }
 
