@@ -15,7 +15,7 @@
 
 #define UART_RX_TX_REG  0x60001000
 #define UART_DLL_REG    0x60001000
-#define UART_DLM_REG    0x60001000
+#define UART_DLM_REG    0x60001004
 #define LINE_CONTROL_REG_ADDR	(UART_RX_TX_REG + 0x0C)
 #define LINE_STATUS_REG_ADDR	(UART_RX_TX_REG + 0x14)
 #define LINE_CONTROL_REG_DLAB   0x00000080
@@ -29,9 +29,9 @@ static int output_char(char c, FILE *file)
 {
   (void) file;
   //Ensure space in buffer
-  while (!((*(unsigned char *)LINE_STATUS_REG_ADDR) & TX_BUFFER_EMPTY));
+  while (!((*(volatile unsigned char *)LINE_STATUS_REG_ADDR) & TX_BUFFER_EMPTY));
 
-  *(unsigned char*)UART_RX_TX_REG = (unsigned char) c;
+  *(volatile unsigned char*)UART_RX_TX_REG = (unsigned char) c;
     return c;  
 }
 
@@ -39,9 +39,9 @@ static int input_char(FILE *file)
 {
   (void) file;
   //Wait for character
-  while (!((*(unsigned char *)LINE_STATUS_REG_ADDR) & RX_HAS_DATA));
+  while (!((*(volatile unsigned char *)LINE_STATUS_REG_ADDR) & RX_HAS_DATA));
 
-  return *((unsigned char*)UART_RX_TX_REG);
+  return *((volatile unsigned char*)UART_RX_TX_REG);
 }
 
 // Adapted from XilinxProcessorIPLib/drivers/uartns550/src/xuartns550_l.c
@@ -70,23 +70,23 @@ static void set_uart_baudrate(int InputClockHz, int BaudRate)
      * Get the line control register contents and set the divisor latch
      * access bit so the baud rate can be set
      */
-    LcrRegister = *((unsigned char*)LINE_CONTROL_REG_ADDR);
-    *(unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) ( LcrRegister | LINE_CONTROL_REG_DLAB);
+    LcrRegister = *((volatile unsigned char*)LINE_CONTROL_REG_ADDR);
+    *(volatile unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) ( LcrRegister | LINE_CONTROL_REG_DLAB);
 
     /*
      * Set the baud Divisors to set rate, the initial write of 0xFF is to
      * keep the divisor from being 0 which is not recommended as per the
      * NS16550D spec sheet
      */
-    *(unsigned char*)UART_DLL_REG = (unsigned char) 0xFF;
-    *(unsigned char*)UART_DLM_REG = (unsigned char) BaudMSB;
-    *(unsigned char*)UART_DLL_REG = (unsigned char) BaudLSB;
+    *(volatile unsigned char*)UART_DLL_REG = (unsigned char) 0xFF;
+    *(volatile unsigned char*)UART_DLM_REG = (unsigned char) BaudMSB;
+    *(volatile unsigned char*)UART_DLL_REG = (unsigned char) BaudLSB;
 
     /*
      * Clear the Divisor latch access bit, DLAB to allow nornal
      * operation and write to the line control register
      */
-    *(unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) LcrRegister;
+    *(volatile unsigned char*)LINE_CONTROL_REG_ADDR = (unsigned char) LcrRegister;
 }
 
 
