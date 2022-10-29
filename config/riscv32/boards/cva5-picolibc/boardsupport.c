@@ -109,9 +109,9 @@ FILE *const stderr = &__stdio;
 
 void _ATTRIBUTE ((__noreturn__)) _exit (int status) {
     if (status == 0)
-        printf("Result: CORRECT\n");
+        printf("Result: CORRECT\r\n");
     else
-        printf("Result: FAILED\n");
+        printf("Result: FAILED\r\n");
 
     __asm__ volatile ("addi x0, x0, 0xA" : : : "memory");//exit verilator
     while(1);
