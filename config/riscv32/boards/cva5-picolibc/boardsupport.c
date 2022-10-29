@@ -102,8 +102,10 @@ static FILE __stdio = FDEV_SETUP_STREAM(output_char,
         NULL,
         _FDEV_SETUP_RW);
 
-FILE *const stdin = &__stdio; __strong_reference(stdin, stdout); __strong_reference(stdin, stderr);
-FILE *const stdout = &__stdio;// __strong_reference(stdin, stdout); __strong_reference(stdin, stderr);
+FILE *const stdin  = &__stdio;
+FILE *const stdout = &__stdio;
+FILE *const stderr = &__stdio;
+
 
 void _ATTRIBUTE ((__noreturn__)) _exit (int status) {
     if (status == 0)
