@@ -35,13 +35,11 @@
 
 #include <string.h>
 #include "support.h"
-#include <riscv_vector.h>
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
 #define LOCAL_SCALE_FACTOR 46
-//#define UPPERLIMIT 20
-#define UPPERLIMIT 16
+#define UPPERLIMIT 20
 #define RANDOM_VALUE (RandomInteger ())
 #define ZERO 0
 #define MOD_SIZE 8095
@@ -145,43 +143,15 @@ RandomInteger (void)
 void
 Multiply (matrix A, matrix B, matrix Res)
 {
-  //register int Outer, Inner, Index;
+  register int Outer, Inner, Index;
 
-  //for (Outer = 0; Outer < UPPERLIMIT; Outer++)
-    //for (Inner = 0; Inner < UPPERLIMIT; Inner++)
-      //{
-	//Res[Outer][Inner] = ZERO;
-	//for (Index = 0; Index < UPPERLIMIT; Index++)
-	  //Res[Outer][Inner] += A[Outer][Index] * B[Index][Inner];
-      //}
-
-    int vl = vsetvl_e32m4(UPPERLIMIT);
-
-    vint32m4_t vA, vB, vC, vTemp, vTemp2;
-
-    register int Outer, Inner, Index;
-
-    for (Outer = 0; Outer < UPPERLIMIT; Outer++) {
-
-        //int32_t value = A[Outer][Index];
-
-        vC = vle32_v_i32m4(&Res[Outer], vl);
-        vTemp = vmul_vx_i32m4(vC, 0, vl);
-        //vse32_v_i32m8(&Res[Outer], vTemp, vl);
-
-
-        for (Index = 0; Index < UPPERLIMIT; Index++) {
-            int32_t value = A[Outer][Index];
-            vB = vle32_v_i32m4(&B[Index], vl);
-            vTemp2 = vmul_vx_i32m4(vB, value, vl);
-            vTemp = vadd_vv_i32m4(vTemp, vTemp2, vl);
-
-
-        }
-
-        vse32_v_i32m4(&Res[Outer], vTemp, vl);
-
-    }
+  for (Outer = 0; Outer < UPPERLIMIT; Outer++)
+    for (Inner = 0; Inner < UPPERLIMIT; Inner++)
+      {
+	Res[Outer][Inner] = ZERO;
+	for (Index = 0; Index < UPPERLIMIT; Index++)
+	  Res[Outer][Inner] += A[Outer][Index] * B[Index][Inner];
+      }
 }
 
 void
