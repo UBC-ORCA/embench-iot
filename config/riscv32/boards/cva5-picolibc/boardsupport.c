@@ -10,7 +10,7 @@
 #include <support.h>
 #include <stdio.h>
 
-#define UART_BASE_REG       0x60001000
+#define UART_BASE_REG       0x88001000
 
 #define UART_RX_REG         (UART_BASE_REG + 0x0)
 #define UART_TX_REG         (UART_BASE_REG + 0x0)
