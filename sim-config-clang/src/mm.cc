@@ -142,12 +142,12 @@ void rvv_mm_test() {
 
 
 
-   int vl_1 = vsetvl_e32m1(10000);
-   int vl_2 = vsetvl_e32m2(10000);
-   int vl_4 = vsetvl_e32m4(10000);
-   int vl_8 = vsetvl_e32m8(10000);
+   int vl_1 = vsetvl_e32m1(1000);
+   int vl_2 = vsetvl_e32m2(1000);
+   int vl_4 = vsetvl_e32m4(1000);
+   int vl_8 = vsetvl_e32m8(1000);
 
-   printf("vlmax values(setting stride to 10000) \n");
+   printf("vlmax values(setting stride to 1000) \n");
     printf("vlmax for LMUL1: %d \n", vl_1);
     printf("vlmax LMUL2: %d \n", vl_2);
     printf("vlmax LMUL4: %d \n", vl_4);
@@ -155,10 +155,10 @@ void rvv_mm_test() {
 
 
     printf("VLEN results ... \n");
-printf("VLEN for LMUL1: %d \n", 32*vl_1);
-printf("VLEN for LMUL2: %d \n", 32*vl_2/2);
-printf("VLEN for LMUL4: %d \n", 32*vl_4/4);
-printf("VLEN for LMUL8: %d \n", 32*vl_8/8);
+printf("VLEN for LMUL1: %d \n", 32*4);
+printf("VLEN for LMUL2: %d \n", 32*8/2);
+printf("VLEN for LMUL4: %d \n", 32*16/4);
+printf("VLEN for LMUL8: %d \n", 32*32/8);
 
  /////   int32_t* B = random_matrix_int(N);
 
