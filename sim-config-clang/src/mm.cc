@@ -155,10 +155,10 @@ void rvv_mm_test() {
 
 
     printf("VLEN results ... \n");
-printf("VLEN for LMUL1: %d \n", 32*4);
-printf("VLEN for LMUL2: %d \n", 32*8/2);
-printf("VLEN for LMUL4: %d \n", 32*16/4);
-printf("VLEN for LMUL8: %d \n", 32*32/8);
+printf("VLEN for LMUL1: %d \n", 32*vl_1);
+printf("VLEN for LMUL2: %d \n", 32*vl_2/2);
+printf("VLEN for LMUL4: %d \n", 32*vl_4/4);
+printf("VLEN for LMUL8: %d \n", 32*vl_8/8);
 
  /////   int32_t* B = random_matrix_int(N);
 
