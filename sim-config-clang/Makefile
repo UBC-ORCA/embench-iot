@@ -2,10 +2,14 @@
 
 RISCV := /home/ychin02
 
-CC := riscv32-unknown-elf-gcc
-CXX := riscv32-unknown-elf-g++
+CC := clang
+CXX := clang++
 
 RISCV_FLAGS := \
+--target=riscv32 \
+--sysroot=$(RISCV)/gnu/riscv32-unknown-elf \
+--gcc-toolchain=$(RISCV)/gnu \
+-menable-experimental-extensions \
 -mno-relax \
 -v \
 -I inc \
@@ -45,9 +49,9 @@ RISCV_FLAGS := \
 -funroll-loops
 
 rvv:
-	$(CXX) $(RISCV_FLAGS) -march=rv32imav -mabi=ilp32 src/mm.cc src/tests.cc -o riscv32-sim-config
+	$(CXX) $(RISCV_FLAGS) -march=rv32imfv -mabi=ilp32 -fuse-ld=lld src/mm.cc src/tests.cc -o riscv32-sim-config
 run:
-	$(RISCV)/spike/bin/spike --isa=rv32imav $(RISCV)/pk/riscv32-unknown-elf/bin/pk riscv32-sim-config
+	$(RISCV)/spike/bin/spike --isa=rv32imfv $(RISCV)/pk/riscv32-unknown-elf/bin/pk riscv32-sim-config
 
 run2:
 	$(RISCV)/spike/bin/spike --isa=rv32imfv $(RISCV)/pk/riscv32-unknown-elf/bin/pk test_scalarAdd
