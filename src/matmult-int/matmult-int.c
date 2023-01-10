@@ -160,21 +160,46 @@ Multiply(matrix A, matrix B, matrix Res)
 
         //int32_t value = A[Outer][Index];
 
-        vC = vle32_v_i32m4(&Res[Outer], vl);
-        vTemp = vmul_vx_i32m4(vC, 0, vl);
-        //vse32_v_i32m8(&Res[Outer], vTemp, vl);
+      //  vC = vle32_v_i32m4(&Res[Outer], vl);
+       // vTemp = vmul_vx_i32m4(vC, 0, vl);
+      
+      	//vse32_v_i32m8(&Res[Outer], vTemp, vl);
 
 
         for (Index = 0; Index < UPPERLIMIT; Index++) {
             int32_t value = A[Outer][Index];
-            vB = vle32_v_i32m4(&B[Index], vl);
-            vTemp2 = vmul_vx_i32m4(vB, value, vl);
-            vTemp = vadd_vv_i32m4(vTemp, vTemp2, vl);
+	    //loop supporting strip mining
+	    for(Inner = 0; Inner < (UPPERLIMIT/vl)*vl; Inner+=vl){
+		if(Index==0){
+	 		vC = vle32_v_i32m4(&Res[Outer][Inner], vl);
+        		vTemp = vmul_vx_i32m4(vC, 0, vl);
+		}
+		else{
+			vTemp = vle32_v_i32m4(&Res[Outer][Inner], vl);
+		}
+   		vB = vle32_v_i32m4(&B[Index][Inner], vl);
+            	vTemp2 = vmul_vx_i32m4(vB, value, vl);
+            	vTemp = vadd_vv_i32m4(vTemp, vTemp2, vl);
+		vse32_v_i32m4(&Res[Outer][Inner], vTemp, vl);
+
+	    }
+	    if(Index==0){
+	 	vC = vle32_v_i32m4(&Res[Outer][Inner], UPPERLIMIT-Inner);
+        	vTemp = vmul_vx_i32m4(vC, 0, UPPERLIMIT-Inner);
+	    }
+	    else{
+		vTemp = vle32_v_i32m4(&Res[Outer][Inner], UPPERLIMIT-Inner);
+	    }
+
+            vB = vle32_v_i32m4(&B[Index][Inner], UPPERLIMIT-Inner);
+            vTemp2 = vmul_vx_i32m4(vB, value, UPPERLIMIT-Inner);
+            vTemp = vadd_vv_i32m4(vTemp, vTemp2, UPPERLIMIT-Inner);
+ 	    vse32_v_i32m4(&Res[Outer][Inner], vTemp, UPPERLIMIT-Inner);
 
 
         }
 
-        vse32_v_i32m4(&Res[Outer], vTemp, vl);
+        //vse32_v_i32m4(&Res[Outer], vTemp, vl);
 
     }
 }
