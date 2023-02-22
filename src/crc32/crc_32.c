@@ -153,11 +153,24 @@ crc32pseudo ()
   int i;
   register DWORD oldcrc32;
 
+//  int rand = rand_beebs();
+
   oldcrc32 = 0xFFFFFFFF;
 
   for (i = 0; i < 1024; ++i)
     {
-      oldcrc32 = UPDC32 (rand_beebs (), oldcrc32);
+      //oldcrc32 = UPDC32 (rand_beebs (), oldcrc32);
+	int rand = rand_beebs();
+
+
+	asm volatile (
+            
+            "        cfu_reg 16,%0,%1,%2;\n"
+            : "=r" (oldcrc32)
+            : "r" (rand),"r" (oldcrc32)
+            : 
+            );
+
     }
 
   return ~oldcrc32;
