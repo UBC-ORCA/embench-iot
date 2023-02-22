@@ -149,9 +149,9 @@ Multiply(matrix A, matrix B, matrix Res)
         //Res[Outer][Inner] += A[Outer][Index] * B[Index][Inner];
         //}
 
-    int vl = vsetvl_e32m1(UPPERLIMIT);
+    int vl = vsetvl_e32m8(UPPERLIMIT);
 
-    vint32m1_t vA, vB, vC, vTemp, vTemp2;
+    vint32m8_t vA, vB, vC, vTemp, vTemp2;
 
     register int Outer, Inner, Index;
 
@@ -170,30 +170,30 @@ Multiply(matrix A, matrix B, matrix Res)
 	    //loop supporting strip mining
 	    for(Inner = 0; Inner < (UPPERLIMIT/vl)*vl; Inner+=vl){
 		if(Index==0){
-	 		vC = vle32_v_i32m1(&Res[Outer][Inner], vl);
-        		vTemp = vmul_vx_i32m1(vC, 0, vl);
+	 		vC = vle32_v_i32m8(&Res[Outer][Inner], vl);
+        		vTemp = vmul_vx_i32m8(vC, 0, vl);
 		}
 		else{
-			vTemp = vle32_v_i32m1(&Res[Outer][Inner], vl);
+			vTemp = vle32_v_i32m8(&Res[Outer][Inner], vl);
 		}
-   		vB = vle32_v_i32m1(&B[Index][Inner], vl);
-            	vTemp2 = vmul_vx_i32m1(vB, value, vl);
-            	vTemp = vadd_vv_i32m1(vTemp, vTemp2, vl);
-		vse32_v_i32m1(&Res[Outer][Inner], vTemp, vl);
+   		vB = vle32_v_i32m8(&B[Index][Inner], vl);
+            	vTemp2 = vmul_vx_i32m8(vB, value, vl);
+            	vTemp = vadd_vv_i32m8(vTemp, vTemp2, vl);
+		vse32_v_i32m8(&Res[Outer][Inner], vTemp, vl);
 
 	    }
 	    if(Index==0){
-	 	vC = vle32_v_i32m1(&Res[Outer][Inner], UPPERLIMIT-Inner);
-        	vTemp = vmul_vx_i32m1(vC, 0, UPPERLIMIT-Inner);
+	 	vC = vle32_v_i32m8(&Res[Outer][Inner], UPPERLIMIT-Inner);
+        	vTemp = vmul_vx_i32m8(vC, 0, UPPERLIMIT-Inner);
 	    }
 	    else{
-		vTemp = vle32_v_i32m1(&Res[Outer][Inner], UPPERLIMIT-Inner);
+		vTemp = vle32_v_i32m8(&Res[Outer][Inner], UPPERLIMIT-Inner);
 	    }
 
-            vB = vle32_v_i32m1(&B[Index][Inner], UPPERLIMIT-Inner);
-            vTemp2 = vmul_vx_i32m1(vB, value, UPPERLIMIT-Inner);
-            vTemp = vadd_vv_i32m1(vTemp, vTemp2, UPPERLIMIT-Inner);
- 	    vse32_v_i32m1(&Res[Outer][Inner], vTemp, UPPERLIMIT-Inner);
+            vB = vle32_v_i32m8(&B[Index][Inner], UPPERLIMIT-Inner);
+            vTemp2 = vmul_vx_i32m8(vB, value, UPPERLIMIT-Inner);
+            vTemp = vadd_vv_i32m8(vTemp, vTemp2, UPPERLIMIT-Inner);
+ 	    vse32_v_i32m8(&Res[Outer][Inner], vTemp, UPPERLIMIT-Inner);
 
 
         }
