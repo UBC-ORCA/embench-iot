@@ -45,9 +45,9 @@ RISCV_FLAGS := \
 -funroll-loops
 
 rvv:
-	$(CXX) $(RISCV_FLAGS) -march=rv32imav -mabi=ilp32 src/mm.cc src/tests.cc -o riscv32-sim-config3
+	$(CXX) $(RISCV_FLAGS) -march=rv32imav -mabi=ilp32 src/mm.cc src/tests.cc -o riscv32-sim-config_db
 run:
-	$(RISCV)/spike/bin/spike --isa=rv32imav $(RISCV)/pk/riscv32-unknown-elf/bin/pk riscv32-sim-config3
+	$(RISCV)/spike/bin/spike --isa=rv32imav $(RISCV)/pk/riscv32-unknown-elf/bin/pk riscv32-sim-config_db
 
 run2:
 	$(RISCV)/spike/bin/spike --isa=rv32imfv $(RISCV)/pk/riscv32-unknown-elf/bin/pk test_scalarAdd
