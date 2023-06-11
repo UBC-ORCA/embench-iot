@@ -190,7 +190,7 @@ stop_trigger ()
 
     user_time = end_time - begin_time;
     user_instruction_count = end_instruction_count - start_instruction_count;
-    scaled_IPC = (user_instruction_count*1000000)/user_time;
+    /* scaled_IPC = (user_instruction_count*1000000)/user_time; */ //FIXME Stalls CPU
 
     printf("Begin time: %lld\r\n", begin_time);
     printf("End time: %lld\r\n", end_time);
@@ -198,7 +198,7 @@ stop_trigger ()
     printf("Begin inst: %lld\r\n", start_instruction_count);
     printf("End inst: %lld\r\n", end_instruction_count);
     printf("User inst: %lld\r\n", user_instruction_count);
-    printf("IPCx1M: %lld\r\n", scaled_IPC);
+    /* printf("IPCx1M: %lld\r\n", scaled_IPC); */
 }
 
 
