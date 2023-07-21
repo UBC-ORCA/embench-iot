@@ -189,11 +189,68 @@ struct sha256_ctx
 #define Choice(x,y,z)   ( (z) ^ ( (x) & ( (y) ^ (z) ) ) )
 #define Majority(x,y,z) ( ((x) & (y)) ^ ((z) & ((x) ^ (y))) )
 
-#define S0(x) (ROTL32(30,(x)) ^ ROTL32(19,(x)) ^ ROTL32(10,(x)))
-#define S1(x) (ROTL32(26,(x)) ^ ROTL32(21,(x)) ^ ROTL32(7,(x)))
+/* New sha256 instructions */
+uint32_t _sha256sig0(uint32_t rs1){
+	uint32_t rd;
+	//cf_id = 0
+	asm volatile (
+		"cfu_reg 0,%0,%1,0;\n"
+		: "=r" (rd)
+		: "r" (rs1)
+		:
+		);
+}
 
-#define s0(x) (ROTL32(25,(x)) ^ ROTL32(14,(x)) ^ ((x) >> 3))
-#define s1(x) (ROTL32(15,(x)) ^ ROTL32(13,(x)) ^ ((x) >> 10))
+uint32_t _sha256sig1(uint32_t rs1){
+	uint32_t rd;
+	//cf_id 1
+	asm volatile (
+		"cfu_reg 1,%0,%1,0;\n"
+		: "=r" (rd)
+		: "r" (rs1)
+		:
+		);
+}
+
+uint32_t _sha256sum0(uint32_t rs1){
+	uint32_t rd;
+	//cf_id 2
+	asm volatile (
+		"cfu_reg 2,%0,%1,0;\n"
+		: "=r" (rd)
+		: "r" (rs1)
+		:
+		);
+}
+
+uint32_t _sha256sum1(uint32_t rs1){
+	uint32_t rd;
+	//cf_id 3
+	asm volatile (
+		"cfu_reg 3,%0,%1,0;\n"
+		: "=r" (rd)
+		: "r" (rs1)
+		:
+		);
+}
+
+
+
+//#define S0(x) (ROTL32(30,(x)) ^ ROTL32(19,(x)) ^ ROTL32(10,(x)))
+//#define S1(x) (ROTL32(26,(x)) ^ ROTL32(21,(x)) ^ ROTL32(7,(x)))
+
+#define S0(x) (_sha256sum0(x))
+#define S1(x) (_sha256sum1(x))
+
+
+
+//#define s0(x) (ROTL32(25,(x)) ^ ROTL32(14,(x)) ^ ((x) >> 3))
+//#define s1(x) (ROTL32(15,(x)) ^ ROTL32(13,(x)) ^ ((x) >> 10))
+
+
+#define s0(x) (_sha256sig0(x))
+#define s1(x) (_sha256sig1(x))
+
 
 #define EXPAND(W,i) \
 ( W[(i) & 15 ] += (s1(W[((i)-2) & 15]) + W[((i)-7) & 15] + s0(W[((i)-15) & 15])) )
@@ -443,6 +500,14 @@ verify_benchmark (int res __attribute ((unused)))
 void
 initialise_benchmark (void)
 {
+	int mcfu_selector = 0x80000001;
+
+	asm volatile (
+		"	csrw 0xBC0, %0; \n"
+		:
+		: "r" (mcfu_selector)
+		:	
+		);
 }
 
 
