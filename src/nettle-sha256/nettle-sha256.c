@@ -190,7 +190,7 @@ struct sha256_ctx
 #define Majority(x,y,z) ( ((x) & (y)) ^ ((z) & ((x) ^ (y))) )
 
 /* New sha256 instructions */
-uint32_t _sha256sig0(uint32_t rs1){
+uint32_t sha256sig0(uint32_t rs1){
 	uint32_t rd;
 	//cf_id = 0
 	asm volatile (
@@ -203,7 +203,7 @@ uint32_t _sha256sig0(uint32_t rs1){
 	return rd;
 }
 
-uint32_t _sha256sig1(uint32_t rs1){
+uint32_t sha256sig1(uint32_t rs1){
 	uint32_t rd;
 	//cf_id 1
 	asm volatile (
@@ -216,7 +216,7 @@ uint32_t _sha256sig1(uint32_t rs1){
 	return rd;
 }
 
-uint32_t _sha256sum0(uint32_t rs1){
+uint32_t sha256sum0(uint32_t rs1){
 	uint32_t rd;
 	//cf_id 2
 	asm volatile (
@@ -229,7 +229,7 @@ uint32_t _sha256sum0(uint32_t rs1){
 	return rd;
 }
 
-uint32_t _sha256sum1(uint32_t rs1){
+uint32_t sha256sum1(uint32_t rs1){
 	uint32_t rd;
 	//cf_id 3
 	asm volatile (
@@ -239,14 +239,17 @@ uint32_t _sha256sum1(uint32_t rs1){
 		:
 		);
 
+	return rd;
+}
+
 
 
 
 //#define S0(x) (ROTL32(30,(x)) ^ ROTL32(19,(x)) ^ ROTL32(10,(x)))
 //#define S1(x) (ROTL32(26,(x)) ^ ROTL32(21,(x)) ^ ROTL32(7,(x)))
 
-#define S0(x) (_sha256sum0(x))
-#define S1(x) (_sha256sum1(x))
+#define S0(x) (sha256sum0(x))
+#define S1(x) (sha256sum1(x))
 
 
 
@@ -254,8 +257,8 @@ uint32_t _sha256sum1(uint32_t rs1){
 //#define s1(x) (ROTL32(15,(x)) ^ ROTL32(13,(x)) ^ ((x) >> 10))
 
 
-#define s0(x) (_sha256sig0(x))
-#define s1(x) (_sha256sig1(x))
+#define s0(x) (sha256sig0(x))
+#define s1(x) (sha256sig1(x))
 
 
 #define EXPAND(W,i) \
