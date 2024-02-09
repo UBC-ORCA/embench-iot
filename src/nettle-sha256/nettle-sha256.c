@@ -21,6 +21,7 @@
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
 #define LOCAL_SCALE_FACTOR 475
+//#define LOCAL_SCALE_FACTOR 1
 
 // From nettle/nettle-types.h
 
@@ -186,8 +187,11 @@ struct sha256_ctx
 
 #define DEBUG(i)
 
-#define Choice(x,y,z)   ( (z) ^ ( (x) & ( (y) ^ (z) ) ) )
-#define Majority(x,y,z) ( ((x) & (y)) ^ ((z) & ((x) ^ (y))) )
+//#define Choice(x,y,z)   ( (z) ^ ( (x) & ( (y) ^ (z) ) ) )
+//#define Majority(x,y,z) ( ((x) & (y)) ^ ((z) & ((x) ^ (y))) )
+
+#define Choice(x,y)   (sha256ch(x,y))
+#define Majority(x,y) (sha256maj(x,y))
 
 /* New sha256 instructions */
 uint32_t sha256sig0(uint32_t rs1){
@@ -242,6 +246,163 @@ uint32_t sha256sum1(uint32_t rs1){
 	return rd;
 }
 
+uint32_t sha256ch(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 4
+    asm volatile (
+        "cfu_reg 4,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256maj(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 5
+    asm volatile (
+        "cfu_reg 5,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+void sha256full(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 6
+    asm volatile (
+        "cfu_reg 6,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    //return rd;
+}
+
+uint32_t sha256callB(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 7
+    asm volatile (
+        "cfu_reg 7,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callC(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 8
+    asm volatile (
+        "cfu_reg 8,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callD(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 9
+    asm volatile (
+        "cfu_reg 9,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callE(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 10
+    asm volatile (
+        "cfu_reg 10,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callF(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 11
+    asm volatile (
+        "cfu_reg 11,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callG(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 12
+    asm volatile (
+        "cfu_reg 12,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+uint32_t sha256callH(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 13
+    asm volatile (
+        "cfu_reg 13,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+//added call A here
+uint32_t sha256callA(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 14
+    asm volatile (
+        "cfu_reg 14,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+    return rd;
+}
+
+//rst sha cfu
+void sha256rst(uint32_t rs1, uint32_t rs2) {
+    uint32_t rd;
+    //cf_id 15
+    asm volatile (
+        "cfu_reg 15,%0,%1,%2;\n"
+        : "=r" (rd)
+        : "r" (rs1), "r" (rs2)
+        :
+        );
+
+   // return rd;
+}
 
 
 
@@ -267,9 +428,9 @@ uint32_t sha256sum1(uint32_t rs1){
 /* It's crucial that DATA is only used once, as that argument will
  * have side effects. */
 #define ROUND(a,b,c,d,e,f,g,h,k,data) do {      \
-    h += S1(e) + Choice(e,f,g) + k + data;      \
+    h += S1(e) + Choice(f,g) + k + data;      \
     d += h;                                     \
-    h += S0(a) + Majority(a,b,c);               \
+    h += S0(a) + Majority(b,c);               \
   } while (0)
 
 void
@@ -499,10 +660,56 @@ verify_benchmark (int res __attribute ((unused)))
 
   for (size_t i = 0; i < _SHA256_DIGEST_LENGTH; i++)
     {
-      if (hash[i] != buffer[i])
-	correct = false;
+      if (hash[i] != buffer[i]) {
+        correct = false;
+        /* printf("here is the index: %d \n", i);
+        printf("here is the hash value: %x \n", hash[i]);
+        printf("here is the buffer value: %x \n", buffer[i]);*/
+      }
+	
     }
-
+  /*
+ // WRITE_UINT32(buffer, sha256full(0, 0));
+  printf("Here is the value at A: %x \n", buffer[0]);
+  printf("Here is the value at A: %x \n", buffer[1]);
+  printf("Here is the value at A: %x \n", buffer[2]);
+  printf("Here is the value at A: %x \n", buffer[3]);
+  //WRITE_UINT32(buffer + 4, sha256callB(0, 0));
+  printf("Here is the value at B: %x \n", buffer[4]);
+  printf("Here is the value at B: %x \n", buffer[5]);
+  printf("Here is the value at B: %x \n", buffer[6]);
+  printf("Here is the value at B: %x \n", buffer[7]);
+  //WRITE_UINT32(buffer + 8, sha256callC(0, 0));
+  printf("Here is the value at C: %x \n", buffer[8]);
+  printf("Here is the value at C: %x \n", buffer[9]);
+  printf("Here is the value at C: %x \n", buffer[10]);
+  printf("Here is the value at C: %x \n", buffer[11]);
+  //WRITE_UINT32(buffer + 12, sha256callD(0, 0));
+  printf("Here is the value at D: %x \n", buffer[12]);
+  printf("Here is the value at D: %x \n", buffer[13]);
+  printf("Here is the value at D: %x \n", buffer[14]);
+  printf("Here is the value at D: %x \n", buffer[15]);
+  //WRITE_UINT32(buffer + 16, sha256callE(0, 0));
+  printf("Here is the value at E: %x \n", buffer[16]);
+  printf("Here is the value at E: %x \n", buffer[17]);
+  printf("Here is the value at E: %x \n", buffer[18]);
+  printf("Here is the value at E: %x \n", buffer[19]);
+  //WRITE_UINT32(buffer + 20, sha256callF(0, 0));
+  printf("Here is the value at F: %x \n", buffer[20]);
+  printf("Here is the value at F: %x \n", buffer[21]);
+  printf("Here is the value at F: %x \n", buffer[22]);
+  printf("Here is the value at F: %x \n", buffer[23]);
+  //WRITE_UINT32(buffer + 24, sha256callG(0, 0));
+  printf("Here is the value at G: %x \n", buffer[24]);
+  printf("Here is the value at G: %x \n", buffer[25]);
+  printf("Here is the value at G: %x \n", buffer[26]);
+  printf("Here is the value at G: %x \n", buffer[27]);
+  //WRITE_UINT32(buffer + 28, sha256callH(0, 0));
+  printf("Here is the value at H: %x \n", buffer[28]);
+  printf("Here is the value at H: %x \n", buffer[29]);
+  printf("Here is the value at H: %x \n", buffer[30]);
+  printf("Here is the value at H: %x \n", buffer[31]);
+  */
   return correct;
 }
 
@@ -545,11 +752,59 @@ benchmark_body (int rpt)
 
   for (i = 0; i < rpt; i++)
     {
+      uint32_t result;
+
       memset (buffer, 0, sizeof (buffer));
       struct sha256_ctx ctx;
       nettle_sha256.init (&ctx);
-      nettle_sha256.update (&ctx, sizeof (msg), msg);
-      nettle_sha256.digest (&ctx, nettle_sha256.digest_size, buffer);
+      //nettle_sha256.update (&ctx, sizeof (msg), msg);
+      //nettle_sha256.digest (&ctx, nettle_sha256.digest_size, buffer);
+
+     ///// result = sha256full(0, 0);
+      /////printf("This is the final value: %x \n", result);
+
+      sha256rst(0, 0);
+      sha256full(0, 0);
+      WRITE_UINT32(buffer, sha256callA(0, 0));
+     /* printf("Here is the value at A: %x \n", buffer[0]);
+      printf("Here is the value at A: %x \n", buffer[1]);
+      printf("Here is the value at A: %x \n", buffer[2]);
+      printf("Here is the value at A: %x \n", buffer[3]);*/
+      WRITE_UINT32(buffer + 4, sha256callB(0, 0));
+      /* printf("Here is the value at B: %x \n", buffer[4]);
+      printf("Here is the value at B: %x \n", buffer[5]);
+      printf("Here is the value at B: %x \n", buffer[6]);
+      printf("Here is the value at B: %x \n", buffer[7]);*/
+      WRITE_UINT32(buffer + 8, sha256callC(0, 0));
+      /*printf("Here is the value at C: %x \n", buffer[8]);
+      printf("Here is the value at C: %x \n", buffer[9]);
+      printf("Here is the value at C: %x \n", buffer[10]);
+      printf("Here is the value at C: %x \n", buffer[11]);*/
+      WRITE_UINT32(buffer + 12, sha256callD(0, 0));
+      /*printf("Here is the value at D: %x \n", buffer[12]);
+      printf("Here is the value at D: %x \n", buffer[13]);
+      printf("Here is the value at D: %x \n", buffer[14]);
+      printf("Here is the value at D: %x \n", buffer[15]);*/
+      WRITE_UINT32(buffer + 16, sha256callE(0, 0));
+      /*printf("Here is the value at E: %x \n", buffer[16]);
+      printf("Here is the value at E: %x \n", buffer[17]);
+      printf("Here is the value at E: %x \n", buffer[18]);
+      printf("Here is the value at E: %x \n", buffer[19]);*/
+      WRITE_UINT32(buffer + 20, sha256callF(0, 0));
+      /*printf("Here is the value at F: %x \n", buffer[20]);
+      printf("Here is the value at F: %x \n", buffer[21]);
+      printf("Here is the value at F: %x \n", buffer[22]);
+      printf("Here is the value at F: %x \n", buffer[23]);*/
+      WRITE_UINT32(buffer + 24, sha256callG(0, 0));
+      /*printf("Here is the value at G: %x \n", buffer[24]);
+      printf("Here is the value at G: %x \n", buffer[25]);
+      printf("Here is the value at G: %x \n", buffer[26]);
+      printf("Here is the value at G: %x \n", buffer[27]);*/
+      WRITE_UINT32(buffer + 28, sha256callH(0, 0));
+      /*printf("Here is the value at H: %x \n", buffer[28]);
+      printf("Here is the value at H: %x \n", buffer[29]);
+      printf("Here is the value at H: %x \n", buffer[30]);
+      printf("Here is the value at H: %x \n", buffer[31]);*/
     }
 
   return 0;
