@@ -3,7 +3,9 @@
 #include <stdlib.h>
 //#include <stdio.h>
 #include "support.h"
-#define USE_VECTOR 0
+#define USE_VECTOR 1
+#define USE_QUEUES 1
+#define USE_2Q 1
 
 #if USE_VECTOR==1
 #include <riscv_vector.h>
@@ -15,12 +17,12 @@
 #define MCFU_SELECTOR_ENABLE    31
 
 #define LOCAL_SCALE_FACTOR 1
-#define VLEN 512*4
+#define VLEN 1024*4
 #define IMG_H VLEN/32
 #define IMG_W VLEN/32
 
-unsigned int in  [IMG_H*IMG_W];
-unsigned int out [IMG_H*IMG_W];
+static volatile unsigned int in  [IMG_H*IMG_W];
+static volatile unsigned short out [IMG_H*IMG_W];
 
 unsigned long xor();
 unsigned long xor() { 
@@ -32,8 +34,8 @@ unsigned long xor() {
 }
 
 #if USE_VECTOR==0
-void rgb2luma(unsigned int *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height);
-void rgb2luma(unsigned int *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
+void rgb2luma(unsigned short *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height);
+void rgb2luma(unsigned short *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
 {
     for (int i = 0; i < image_width*image_height; i++) {
         unsigned int red = (rgb[i]&0xFF0000) >> 16;
@@ -44,44 +46,108 @@ void rgb2luma(unsigned int *luma, unsigned int *rgb, const int32_t image_width, 
 }
 
 #else
-void v_rgb2luma(unsigned int *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height);
-void v_rgb2luma(unsigned int *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
+void v_rgb2luma(unsigned short *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height);
+void v_rgb2luma(unsigned short *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
 {
     size_t vl;
-    vuint32m4_t mask, red, green, blue, offset, r_coeff, g_coeff, b_coeff, out, tmp;
+    vuint32m4_t red, green, blue, out, tmp, vrgb;
+    vuint16m2_t red16, green16, blue16, out16, tmp16, vrgb16;
 
-    vl = vsetvl_e32m4 (image_width);
+#if USE_QUEUES==0
+    vuint32m4_t red2, green2, blue2, out2, tmp2, vrgb2;
+    vuint16m2_t red16_2, green16_2, blue16_2, out16_2, tmp16_2, vrgb16_2;
 
-    for (int i = 0; i < image_height; i++){
-        int state_id = i % 2;
+    vl      = vsetvl_e32m4 (image_width);
+    vrgb    = vle32_v_u32m4(rgb, vl);
+    for (int i = 0; i < image_height; i+=2){
+        vl      = vsetvl_e32m4 (image_width);
+        vrgb2   = vle32_v_u32m4(rgb+image_width, vl);
+        vl      = vsetvl_e16m2 (image_width);
+
+        red16   = vnsrl_wx_u16m2(vrgb, 16U, vl);
+        green16 = vnsrl_wx_u16m2(vrgb, 8U, vl);
+        blue16  = vnsrl_wx_u16m2(vrgb, 0U, vl);
+
+        red16   = vand_vx_u16m2(red16, 255U, vl);
+        green16 = vand_vx_u16m2(green16, 255U, vl);
+        blue16  = vand_vx_u16m2(blue16, 255U, vl);
+
+        red16   = vmul_vx_u16m2(red16, 66U, vl);
+        green16 = vmul_vx_u16m2(green16, 129U, vl);
+        blue16  = vmul_vx_u16m2(blue16, 25U, vl);
+
+        out16   = vadd_vv_u16m2(red16, green16, vl);
+        tmp16   = vadd_vx_u16m2(blue16, 128U, vl);
+        out16   = vadd_vv_u16m2(out16, tmp16, vl);
+        out16   = vsrl_vx_u16m2(out16, 8U, vl);
+
+        vse16_v_u16m2 (luma, out16, vl);
+
+        luma += image_width;
+        rgb  += image_width;
+
+        vl        = vsetvl_e32m4 (image_width);
+        vrgb      = vle32_v_u32m4(rgb+image_width, vl);
+        vl        = vsetvl_e16m2 (image_width);
+
+        red16_2   = vnsrl_wx_u16m2(vrgb2, 16U, vl);
+        green16_2 = vnsrl_wx_u16m2(vrgb2, 8U, vl);
+        blue16_2  = vnsrl_wx_u16m2(vrgb2, 0U, vl);
+
+        red16_2   = vand_vx_u16m2(red16_2, 255U, vl);
+        green16_2 = vand_vx_u16m2(green16_2, 255U, vl);
+        blue16_2  = vand_vx_u16m2(blue16_2, 255U, vl);
+
+        red16_2   = vmul_vx_u16m2(red16_2, 66U, vl);
+        green16_2 = vmul_vx_u16m2(green16_2, 129U, vl);
+        blue16_2  = vmul_vx_u16m2(blue16_2, 25U, vl);
+
+        out16_2   = vadd_vv_u16m2(red16_2, green16_2, vl);
+        tmp16_2   = vadd_vx_u16m2(blue16_2, 128U, vl);
+        out16_2   = vadd_vv_u16m2(out16_2, tmp16_2, vl);
+        out16_2   = vsrl_vx_u16m2(out16_2, 8U, vl);
+
+        vse16_v_u16m2 (luma, out16_2, vl);
+
+        luma += image_width;
+        rgb  += image_width;
+    }
+#else
+    for (int i = 0; i < image_height; i+=1){
+#if USE_2Q==1
+        int state_id = i & 1;
 
         asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
                                                           (state_id << MCFU_SELECTOR_STATE_ID)), 
-                                               [csr] "i" (CSR_MCFU_SELECTOR)); 
+                                               [csr] "i" (CSR_MCFU_SELECTOR));
+#endif
+        vl      = vsetvl_e32m4 (image_width);
+        vrgb    = vle32_v_u32m4(rgb, vl);
+        vl      = vsetvl_e16m2 (image_width);
 
-        blue    = vle32_v_u32m4(rgb, vl);
-        green   = vsrl_vx_u32m4(blue, 8U, vl);
-        red     = vsrl_vx_u32m4(blue, 16U, vl);
+        red16   = vnsrl_wx_u16m2(vrgb, 16U, vl);
+        green16 = vnsrl_wx_u16m2(vrgb, 8U, vl);
+        blue16  = vnsrl_wx_u16m2(vrgb, 0U, vl);
 
-        red     = vand_vx_u32m4(red, 255U, vl);
-        out     = vmul_vx_u32m4(red, 66U, vl);
+        red16   = vand_vx_u16m2(red16, 255U, vl);
+        green16 = vand_vx_u16m2(green16, 255U, vl);
+        blue16  = vand_vx_u16m2(blue16, 255U, vl);
 
-        green   = vand_vx_u32m4(green, 255U, vl);
-        tmp     = vmul_vx_u32m4(green, 129U, vl);
-        out     = vadd_vv_u32m4(out, tmp, vl);
+        red16   = vmul_vx_u16m2(red16, 66U, vl);
+        green16 = vmul_vx_u16m2(green16, 129U, vl);
+        blue16  = vmul_vx_u16m2(blue16, 25U, vl);
 
-        blue    = vand_vx_u32m4(blue, 255U, vl);
-        tmp     = vmul_vx_u32m4(blue, 25U, vl);
-        out     = vadd_vv_u32m4(out, tmp, vl);
+        out16   = vadd_vv_u16m2(red16, green16, vl);
+        tmp16   = vadd_vx_u16m2(blue16, 128U, vl);
+        out16   = vadd_vv_u16m2(out16, tmp16, vl);
+        out16   = vsrl_vx_u16m2(out16, 8U, vl);
 
-        out     = vadd_vx_u32m4(out, 128U, vl);
-        out     = vsrl_vx_u32m4(out, 8U, vl);
+        vse16_v_u16m2 (luma, out16, vl);
 
-        vse32_v_u32m4 (luma, out, vl);
-
-        luma += vl;
-        rgb  += vl;
+        luma += image_width;
+        rgb  += image_width;
     }
+#endif
 }
 
 #endif
@@ -101,8 +167,15 @@ int benchmark (void)
 }
 
 
-static int __attribute__ ((noinline)) benchmark_body (int rpt)
+static int /*__attribute__((optimize("-O2")))*/ __attribute__ ((noinline)) benchmark_body (int rpt)
 {
+    /*
+    printf("------------------------------\r\n");
+    printf("%x\r\n", &out[0]);
+    printf("%x\r\n", &out[IMG_H*IMG_W-1]);
+    printf("------------------------------\r\n");
+    */
+
     int i;
 
     for (i = 0; i < rpt; i++)
@@ -139,7 +212,7 @@ void initialise_benchmark ()
 
 int verify_benchmark (int unused)
 {
-    unsigned int out_exp [IMG_H*IMG_W] = {0};
+    unsigned short out_exp [IMG_H*IMG_W] = {0};
 
     for (int i = 0; i < IMG_W*IMG_H; i++) {
         unsigned int red   = (in[i] & 0xFF0000) >> 16U;
@@ -149,9 +222,14 @@ int verify_benchmark (int unused)
     }
 
     /*
-    for (int i = 0; i < IMG_H*IMG_W; ++i) 
-        if (out[i] != out_exp[i])
-            printf("%d \t Actual:%02x \t Expected:%02x\r\n", i, out[i], out_exp[i]);
+    for (int j = 0; j < IMG_H; ++j) {
+        for (int k = 0; k < IMG_W; ++k) {
+            int i = j*IMG_W + k;
+            if (out[i] != out_exp[i]) {
+                printf("%d = (%d,%d) \t Actual:%02x \t Expected:%02x\r\n", i, j, k, out[i], out_exp[i]);
+            }
+        }
+    }
     */
 
     return 0 == memcmp (out, out_exp, IMG_H * IMG_W * sizeof (out[0]));
