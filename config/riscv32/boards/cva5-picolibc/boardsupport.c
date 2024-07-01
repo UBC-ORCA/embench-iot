@@ -24,7 +24,15 @@
 #define UART_LSR_REG_DR     0x00000001
 
 #define UART_BAUDRATE       115200
-#define UART_CLK_FREQ       100000000   
+//#define UART_CLK_FREQ       100000000   
+#define UART_CLK_FREQ       50000000   
+
+#define CX_PERF(id) ({                                                                                \
+  int retval;                                                                                         \
+  asm volatile ("cfu_reg " #id ",%[cnt],x0,x0" : [cnt] "=r" (retval)                                  \
+                                                 : );                                                 \
+  retval;                                                                                             \
+  })
 
 unsigned long long begin_time, end_time, user_time;
 unsigned long long start_instruction_count, end_instruction_count, user_instruction_count;
@@ -199,6 +207,11 @@ stop_trigger ()
     printf("End inst: %lld\r\n", end_instruction_count);
     printf("User inst: %lld\r\n", user_instruction_count);
     /* printf("IPCx1M: %lld\r\n", scaled_IPC); */
+
+    int ready_cnt = CX_PERF(0);
+    int processed_cnt = CX_PERF(1);
+    printf("Ready cnt: %d\r\n", ready_cnt);
+    printf("Processed cnt: %d\r\n", processed_cnt);
 }
 
 
