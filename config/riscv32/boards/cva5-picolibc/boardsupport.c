@@ -25,11 +25,11 @@
 
 #define UART_BAUDRATE       115200
 //#define UART_CLK_FREQ       100000000   
-#define UART_CLK_FREQ       50000000   
+#define UART_CLK_FREQ       250000000   
 
 #define CX_PERF(id) ({                                                                                \
   int retval;                                                                                         \
-  asm volatile ("cfu_reg " #id ",%[cnt],x0,x0" : [cnt] "=r" (retval)                                  \
+  asm volatile ("cx_reg " #id ",%[cnt],x0,x0" : [cnt] "=r" (retval)                                  \
                                                  : );                                                 \
   retval;                                                                                             \
   })
@@ -208,10 +208,19 @@ stop_trigger ()
     printf("User inst: %lld\r\n", user_instruction_count);
     /* printf("IPCx1M: %lld\r\n", scaled_IPC); */
 
-    int ready_cnt = CX_PERF(0);
-    int processed_cnt = CX_PERF(1);
-    printf("Ready cnt: %d\r\n", ready_cnt);
-    printf("Processed cnt: %d\r\n", processed_cnt);
+    int num_cxus = 2;
+    printf("Performance counters...\r\n");
+    for (int cxu_id = 0, state_id = 0; cxu_id < num_cxus; ++cxu_id) {
+      printf("CXU-%d\r\n", cxu_id);
+      asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << 31) | 
+                                                        (state_id << 16) |
+                                                         (cxu_id << 0)), 
+                                             [csr] "i" (0xBC0));
+      printf("NBVL cycle: %d\r\n", CX_PERF(0));
+      printf("NBVL insn : %d\r\n", CX_PERF(1));
+      printf("ALU bubble: %d\r\n", CX_PERF(2));
+      printf("ALU inuse : %d\r\n", CX_PERF(3));
+    }
 }
 
 

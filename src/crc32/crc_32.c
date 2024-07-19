@@ -167,7 +167,7 @@ crc32pseudo ()
 	int rand = rand_beebs();
 
 	asm volatile (
-            "        cfu_reg 0,%0,%1,%2;\n"
+            "        cx_reg 0,%0,%1,%2;\n"
             : "=r" (oldcrc32)
             : "r" (rand),"r" (oldcrc32)
             : 

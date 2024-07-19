@@ -29,12 +29,12 @@
 
 #define CX_FENCE_SCALAR_READ(base_address, end_address)                                               \
   do {                                                                                                \
-    asm volatile ("cfu_reg 1008,x0,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+    asm volatile ("cx_reg 1008,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
   } while(0)
 
 #define CX_FENCE_SCALAR_WRITE(base_address, end_address)                                              \
   do {                                                                                                \
-    asm volatile ("cfu_reg 1009,x0,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+    asm volatile ("cx_reg 1009,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
   } while(0)
 
 

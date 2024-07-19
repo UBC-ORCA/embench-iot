@@ -57,6 +57,16 @@ Permission to license under GPL obtained by email from Björn Lisper
 #define MOD_SIZE 8095
 typedef long matrix[UPPERLIMIT][UPPERLIMIT];
 
+#define CX_FENCE_SCALAR_READ(base_address, end_address)                                               \
+  do {                                                                                                \
+    asm volatile ("cx_reg 1008,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+  } while(0)
+
+#define CX_FENCE_SCALAR_WRITE(base_address, end_address)                                              \
+  do {                                                                                                \
+    asm volatile ("cx_reg 1009,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+  } while(0)
+
 /*
  * MATRIX MULTIPLICATION BENCHMARK PROGRAM:
  * This program multiplies 2 square matrices resulting in a 3rd
@@ -111,23 +121,23 @@ inline void v_Multiply (long* A, long* B, long* Res, long m, long p, long n, lon
 {
     register int Outer, Inner, Index;
 
-    size_t vl = vsetvl_e32m4(n);
+    size_t vl = __riscv_vsetvl_e32m4(n);
     vint32m4_t vA, vB, vTemp;
     long int value;
 
     for (Outer = 0; Outer < m; Outer++)
     {
         value = A[Outer*root_p+0];
-        vTemp = vle32_v_i32m4(&B[0*root_n+0], vl);
-        vTemp = vmul_vx_i32m4(vTemp, value, vl);
+        vTemp = __riscv_vle32_v_i32m4(&B[0*root_n+0], vl);
+        vTemp = __riscv_vmul_vx_i32m4(vTemp, value, vl);
         for (Index = 1; Index < p; Index++)
         {
             value = A[Outer*root_p+Index];
-            vB = vle32_v_i32m4(&B[Index*root_n+0], vl);
-            vB = vmul_vx_i32m4(vB, value, vl);
-            vTemp = vadd_vv_i32m4(vTemp, vB, vl);
+            vB = __riscv_vle32_v_i32m4(&B[Index*root_n+0], vl);
+            vB = __riscv_vmul_vx_i32m4(vB, value, vl);
+            vTemp = __riscv_vadd_vv_i32m4(vTemp, vB, vl);
         }
-        vse32_v_i32m4(&Res[Outer*root_n+0], vTemp, vl);
+        __riscv_vse32_v_i32m4(&Res[Outer*root_n+0], vTemp, vl);
     }
 }
 //#endif
@@ -150,25 +160,25 @@ void matmul(matrix mat_a, matrix mat_b, matrix mat_c,
 #else
     //C11
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (0 << MCFU_SELECTOR_STATE_ID)), 
+                                                      (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0], &mat_b[0][0], &mat_c[0][0], m/2, p, n/2, root_p, root_n);
 
     //C12
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (1 << MCFU_SELECTOR_STATE_ID)), 
+                                                      (1 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0], &mat_b[0][0] + n/2, &mat_c[0][0] + n/2, m/2, p, n-n/2, root_p, root_n);
 
     //C21
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (0 << MCFU_SELECTOR_STATE_ID)), 
+                                                      (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0] + (m/2)*root_p, &mat_b[0][0], &mat_c[0][0] + (m/2)*root_n, m-m/2, p, n/2, root_p, root_n);
 
     //C22
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (1 << MCFU_SELECTOR_STATE_ID)), 
+                                                      (1 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0] + (m/2)*root_p, &mat_b[0][0] + n/2, &mat_c[0][0] + (m/2)*root_n + n/2, m-m/2, p,n-n/2, root_p, root_n);
 #endif
@@ -194,13 +204,16 @@ benchmark_body (int rpt)
 {
     int i;
 
+    memcpy (ArrayA, ArrayA_ref,
+            UPPERLIMIT * UPPERLIMIT * sizeof (ArrayA[0][0]));
+    memcpy (ArrayB, ArrayB_ref,
+            UPPERLIMIT * UPPERLIMIT * sizeof (ArrayA[0][0]));
+#if USE_VECTOR==1
+    asm volatile ("fence rw, io");
+#endif
     for (i = 0; i < rpt; i++)
     {
-        memcpy (ArrayA, ArrayA_ref,
-                UPPERLIMIT * UPPERLIMIT * sizeof (ArrayA[0][0]));
-        memcpy (ArrayB, ArrayB_ref,
-                UPPERLIMIT * UPPERLIMIT * sizeof (ArrayA[0][0]));
-
+    
         matmul (ArrayA, ArrayB, ResultArray, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT);
 
 //#if USE_VECTOR==0
@@ -209,6 +222,9 @@ benchmark_body (int rpt)
 //        v_Multiply (ArrayA, ArrayB, ResultArray, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT, UPPERLIMIT);
 //#endif
     }
+#if USE_VECTOR==1
+        CX_FENCE_SCALAR_READ(&ResultArray[0], ((char*)(&ResultArray[UPPERLIMIT][UPPERLIMIT]))-1);
+#endif
 
     return 0;
 }

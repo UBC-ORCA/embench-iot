@@ -388,43 +388,43 @@ void v_jacobi_unit4(int* A, int* B, const int32_t tsteps, const int32_t n)
     int size_y = n-2;
     int size_x = n-2;
 
-    unsigned long int gvl = vsetvl_e32m4(size_y); //PLCT
+    unsigned long int gvl = __riscv_vsetvl_e32m4(size_y); //PLCT
 
     int xConstant = 2;
 
     for (int j = 0; j < size_x; j += gvl) 
     {
-        gvl         = vsetvl_e32m4(size_y-j); //PLCT
-        xUtop       = vle32_v_i32m4(&A[0*n+j+1],gvl);
-        xU          = vle32_v_i32m4(&A[1*n+j+1],gvl);
-        xUbottom    = vle32_v_i32m4(&A[2*n+j+1],gvl);
+        gvl         = __riscv_vsetvl_e32m4(size_y-j); //PLCT
+        xUtop       = __riscv_vle32_v_i32m4(&A[0*n+j+1],gvl);
+        xU          = __riscv_vle32_v_i32m4(&A[1*n+j+1],gvl);
+        xUbottom    = __riscv_vle32_v_i32m4(&A[2*n+j+1],gvl);
 
         for (int i = 0; i < size_y; i+=2) 
         {
-            xUbottom_2  = vle32_v_i32m4(&A[2*n+j+1+n],gvl);
-            xUleft      = vslide1up_vx_i32m4(xU,A[1*n+j],gvl);
-            xUright     = vslide1down_vx_i32m4(xU,A[1*n+j+gvl+1],gvl);
-            xUtmp       = vadd_vv_i32m4(xUtop,xUbottom,gvl);
-            xUtmp2      = vadd_vv_i32m4(xUleft,xUright,gvl);
-            xUtmp       = vadd_vv_i32m4(xU,xUtmp,gvl);
-            xUtmp       = vadd_vv_i32m4(xUtmp,xUtmp2,gvl);
-            xUtmp       = vmul_vx_i32m4(xUtmp,xConstant,gvl);
-            vse32_v_i32m4(&B[1*n+j+1], xUtmp,gvl);
+            xUbottom_2  = __riscv_vle32_v_i32m4(&A[2*n+j+1+n],gvl);
+            xUleft      = __riscv_vslide1up_vx_i32m4(xU,A[1*n+j],gvl);
+            xUright     = __riscv_vslide1down_vx_i32m4(xU,A[1*n+j+gvl+1],gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xUtop,xUbottom,gvl);
+            xUtmp2      = __riscv_vadd_vv_i32m4(xUleft,xUright,gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xU,xUtmp,gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xUtmp,xUtmp2,gvl);
+            xUtmp       = __riscv_vmul_vx_i32m4(xUtmp,xConstant,gvl);
+            __riscv_vse32_v_i32m4(&B[1*n+j+1], xUtmp,gvl);
             xUtop       = xU;
             xU          = xUbottom;
 
             A += n;
             B += n;
 
-            xUbottom    = vle32_v_i32m4(&A[2*n+j+1+n],gvl);
-            xUleft      = vslide1up_vx_i32m4(xU,A[1*n+j],gvl);
-            xUright     = vslide1down_vx_i32m4(xU,A[1*n+j+gvl+1],gvl);
-            xUtmp       = vadd_vv_i32m4(xUtop,xUbottom_2,gvl);
-            xUtmp2      = vadd_vv_i32m4(xUleft,xUright,gvl);
-            xUtmp       = vadd_vv_i32m4(xU,xUtmp,gvl);
-            xUtmp       = vadd_vv_i32m4(xUtmp,xUtmp2,gvl);
-            xUtmp       = vmul_vx_i32m4(xUtmp,xConstant,gvl);
-            vse32_v_i32m4(&B[1*n+j+1], xUtmp,gvl);
+            xUbottom    = __riscv_vle32_v_i32m4(&A[2*n+j+1+n],gvl);
+            xUleft      = __riscv_vslide1up_vx_i32m4(xU,A[1*n+j],gvl);
+            xUright     = __riscv_vslide1down_vx_i32m4(xU,A[1*n+j+gvl+1],gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xUtop,xUbottom_2,gvl);
+            xUtmp2      = __riscv_vadd_vv_i32m4(xUleft,xUright,gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xU,xUtmp,gvl);
+            xUtmp       = __riscv_vadd_vv_i32m4(xUtmp,xUtmp2,gvl);
+            xUtmp       = __riscv_vmul_vx_i32m4(xUtmp,xConstant,gvl);
+            __riscv_vse32_v_i32m4(&B[1*n+j+1], xUtmp,gvl);
             xUtop       = xU;
             xU          = xUbottom_2;
 
@@ -498,12 +498,12 @@ void v_jacobi_unit5(int* A, int* B, const int32_t tsteps, const int32_t n)
 }
 #define CX_FENCE_SCALAR_READ(base_address, end_address)                                               \
   do {                                                                                                \
-    asm volatile ("cfu_reg 1008,x0,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+    asm volatile ("cx_reg 1008,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
   } while(0)
 
 #define CX_FENCE_SCALAR_WRITE(base_address, end_address)                                              \
   do {                                                                                                \
-    asm volatile ("cfu_reg 1009,x0,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
+    asm volatile ("cx_reg 1009,x31,%[ba],%[ea]" :: [ba] "r" (base_address), [ea] "r" (end_address));  \
   } while(0)
 
 void v_jacobi(int* A, int* B, const int32_t tsteps, const int32_t n);
