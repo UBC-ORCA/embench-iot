@@ -179,7 +179,10 @@ crc32pseudo ()
   {
 	int rand = rand_beebs();
 #if USE_CX==1
-	asm volatile ("cx_reg 99,%0,%1,%2;\n" : "=r" (oldcrc32) : "r" (rand),"r" (oldcrc32));
+        int cxu_id = 0;
+        int state_id = 0;
+        MCX_SELECT(cxu_id, state_id);
+	asm volatile ("cx_reg 0,%0,%1,%2;\n" : "=r" (oldcrc32) : "r" (rand),"r" (oldcrc32));
 #else
         oldcrc32 = UPDC32(rand, oldcrc32);
 #endif
@@ -191,7 +194,13 @@ crc32pseudo ()
 void
 initialise_benchmark (void)
 {
-    MCX_SELECT(0, 0);
+    // Enable CX
+    asm volatile ("csrw %[csr], %[rs];" :: \
+    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
+              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
+              (0  << MCX_SHAMT_STATE_ID) | \
+              (0  << MCX_SHAMT_CXU_ID)), \
+    [csr] "i" (CSR_MCX_SELECTOR));
 }
 
 
