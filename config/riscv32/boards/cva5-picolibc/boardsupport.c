@@ -25,7 +25,7 @@
 
 #define UART_BAUDRATE       115200
 //#define UART_CLK_FREQ       100000000   
-#define UART_CLK_FREQ       250000000   
+#define UART_CLK_FREQ       200000000   
 
 #define CX_PERF(id) ({                                                                                \
   int retval;                                                                                         \
@@ -198,7 +198,7 @@ stop_trigger ()
 
     user_time = end_time - begin_time;
     user_instruction_count = end_instruction_count - start_instruction_count;
-    /* scaled_IPC = (user_instruction_count*1000000)/user_time; */ //FIXME Stalls CPU
+    //scaled_IPC = (user_instruction_count*1000000)/user_time;
 
     printf("Begin time: %lld\r\n", begin_time);
     printf("End time: %lld\r\n", end_time);
@@ -206,21 +206,9 @@ stop_trigger ()
     printf("Begin inst: %lld\r\n", start_instruction_count);
     printf("End inst: %lld\r\n", end_instruction_count);
     printf("User inst: %lld\r\n", user_instruction_count);
-    /* printf("IPCx1M: %lld\r\n", scaled_IPC); */
+    //printf("IPCx1M: %lld\r\n", scaled_IPC);
 
-    int num_cxus = 2;
-    printf("Performance counters...\r\n");
-    for (int cxu_id = 0, state_id = 0; cxu_id < num_cxus; ++cxu_id) {
-      printf("CXU-%d\r\n", cxu_id);
-      asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << 31) | 
-                                                        (state_id << 16) |
-                                                         (cxu_id << 0)), 
-                                             [csr] "i" (0xBC0));
-      printf("NBVL cycle: %d\r\n", CX_PERF(0));
-      printf("NBVL insn : %d\r\n", CX_PERF(1));
-      printf("ALU bubble: %d\r\n", CX_PERF(2));
-      printf("ALU inuse : %d\r\n", CX_PERF(3));
-    }
+
 }
 
 

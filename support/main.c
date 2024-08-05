@@ -24,7 +24,7 @@ main (int argc __attribute__ ((unused)),
 
   initialise_board ();
   initialise_benchmark ();
-  warm_caches (WARMUP_HEAT);
+  //warm_caches (WARMUP_HEAT);
 
   start_trigger ();
   result = benchmark ();

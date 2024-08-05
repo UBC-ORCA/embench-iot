@@ -20,13 +20,32 @@
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
-#define LOCAL_SCALE_FACTOR 170
+#define LOCAL_SCALE_FACTOR 1
 
 #include <stdlib.h>
 
 #ifdef __TURBOC__
 #pragma warn -cln
 #endif
+
+#define USE_CX 1
+
+// GENERAL CXU CONTROL
+#define CSR_MCX_SELECTOR 0xBC0
+#define CSR_CX_STATUS    0x801
+#define MCX_SHAMT_CXU_ID    0
+#define MCX_SHAMT_STATE_ID  16
+#define MCX_SHAMT_CXE       28
+#define MCX_SHAMT_VERSION   29
+
+#define MCX_SELECT(cxu_id, state_id) \
+    asm volatile ("csrw %[csr], %[rs];" :: \
+    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
+              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
+              (state_id << MCX_SHAMT_STATE_ID) | \
+              (cxu_id   << MCX_SHAMT_CXU_ID)), \
+    [csr] "i" (CSR_MCX_SELECTOR));
+    
 
 /**********************************************************************\
   |* Demonstration program to compute the 32-bit CRC used as the frame  *|
@@ -45,7 +64,6 @@ typedef unsigned char BYTE;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 
-#define UPDC32(octet,crc) (crc_32_tab[((crc)^((BYTE)octet)) & 0xff] ^ ((crc) >> 8))
 
 /* Need an unsigned type capable of holding 32 bits; */
 
@@ -147,32 +165,24 @@ static const UNS_32_BITS crc_32_tab[] = {	/* CRC polynomial 0xedb88320 */
 };
 
 
+#define UPDC32(octet,crc) (crc_32_tab[((crc)^((BYTE)octet)) & 0xff] ^ ((crc) >> 8))
+
 DWORD
 crc32pseudo ()
 {
   int i;
   register DWORD oldcrc32;
-
   oldcrc32 = 0xFFFFFFFF;
 
 
-  for (i = 0; i < 1024; ++i)
-    {
-        /*
-        oldcrc32 = UPDC32 (rand_beebs (), oldcrc32);
-        */
-
-        ////////////////////////////////////////////
-        /// CFU CRC
+  for (i = 0; i < 1024; ++i) 
+  {
 	int rand = rand_beebs();
-
-	asm volatile (
-            "        cx_reg 0,%0,%1,%2;\n"
-            : "=r" (oldcrc32)
-            : "r" (rand),"r" (oldcrc32)
-            : 
-            );
-    
+#if USE_CX==1
+	asm volatile ("cx_reg 99,%0,%1,%2;\n" : "=r" (oldcrc32) : "r" (rand),"r" (oldcrc32));
+#else
+        oldcrc32 = UPDC32(rand, oldcrc32);
+#endif
     }
 
   return ~oldcrc32;
@@ -181,13 +191,7 @@ crc32pseudo ()
 void
 initialise_benchmark (void)
 {
-    int mcfu_selector = 0x80000000;
-    asm volatile (
-            "        csrw 0xBC0, %0;\n"     
-            : 
-            :  "r" (mcfu_selector)
-            : 
-            );
+    MCX_SELECT(0, 0);
 }
 
 

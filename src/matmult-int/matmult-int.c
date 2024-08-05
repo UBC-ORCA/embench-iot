@@ -160,25 +160,29 @@ void matmul(matrix mat_a, matrix mat_b, matrix mat_c,
 #else
     //C11
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (0 << MCFU_SELECTOR_CFU_ID)), 
+                                                     (0 << MCFU_SELECTOR_STATE_ID) | 
+                                                     (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0], &mat_b[0][0], &mat_c[0][0], m/2, p, n/2, root_p, root_n);
 
     //C12
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (1 << MCFU_SELECTOR_CFU_ID)), 
+                                                     (0 << MCFU_SELECTOR_STATE_ID) | 
+                                                     (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0], &mat_b[0][0] + n/2, &mat_c[0][0] + n/2, m/2, p, n-n/2, root_p, root_n);
 
     //C21
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (0 << MCFU_SELECTOR_CFU_ID)), 
+                                                     (0 << MCFU_SELECTOR_STATE_ID) | 
+                                                     (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0] + (m/2)*root_p, &mat_b[0][0], &mat_c[0][0] + (m/2)*root_n, m-m/2, p, n/2, root_p, root_n);
 
     //C22
     asm volatile ("csrw %[csr], %[rs];" :: [rs] "r" ((1 << MCFU_SELECTOR_ENABLE) | 
-                                                      (1 << MCFU_SELECTOR_CFU_ID)), 
+                                                     (0 << MCFU_SELECTOR_STATE_ID) | 
+                                                     (0 << MCFU_SELECTOR_CFU_ID)), 
                                            [csr] "i" (CSR_MCFU_SELECTOR));
     v_Multiply(&mat_a[0][0] + (m/2)*root_p, &mat_b[0][0] + n/2, &mat_c[0][0] + (m/2)*root_n + n/2, m-m/2, p,n-n/2, root_p, root_n);
 #endif
