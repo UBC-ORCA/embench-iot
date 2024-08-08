@@ -102,12 +102,14 @@ void warm_caches (int  heat)
 
 int benchmark (void)
 {
-    return benchmark_body (LOCAL_SCALE_FACTOR * 1);
+    return benchmark_body (LOCAL_SCALE_FACTOR * CPU_MHZ);
 }
 
 
 static int __attribute__ ((noinline)) benchmark_body (int rpt)
 {
+    // Enable CX
+    cx_init();
     asm volatile ("fence rw, io");
     int i;
 
@@ -122,9 +124,6 @@ static int __attribute__ ((noinline)) benchmark_body (int rpt)
 
 void initialise_benchmark ()
 {
-    // Enable CX
-    cx_init();
-
     // Load data for each frame...
     for (int i = 0; i < IMG_H*IMG_W; ++i) {
         in[i] = xor();

@@ -178,13 +178,7 @@ crc32pseudo ()
 void
 initialise_benchmark (void)
 {
-    // Enable CX
-    // asm volatile ("csrw %[csr], %[rs];" :: \
-    // [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
-    //           (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
-    //           (0  << MCX_SHAMT_STATE_ID) | \
-    //           (0  << MCX_SHAMT_CXU_ID)), \
-    // [csr] "i" (CSR_MCX_SELECTOR));
+
 }
 
 
