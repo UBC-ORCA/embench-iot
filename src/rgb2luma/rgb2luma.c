@@ -3,6 +3,8 @@
 #include <stdlib.h>
 //#include <stdio.h>
 #include "support.h"
+#include "../../../cx_runtime/include/ci.h"
+#include "../../../cx_runtime/zoo/vector/vector_common.h"
 #include <riscv_vector.h>
 #define USE_VECTOR 1
 
@@ -14,22 +16,6 @@
 #define NUM_CXUS (1<<LOG2_NUM_CXUs)
 #define LOG2_NUM_STATES 3
 #define NUM_STATES (1<<LOG2_NUM_STATES)
-
-// GENERAL CXU CONTROL
-#define CSR_MCX_SELECTOR 0xBC0
-#define CSR_CX_STATUS    0x801
-#define MCX_SHAMT_CXU_ID    0
-#define MCX_SHAMT_STATE_ID  16
-#define MCX_SHAMT_CXE       28
-#define MCX_SHAMT_VERSION   29
-
-#define MCX_SELECT(cxu_id, state_id) \
-    asm volatile ("csrw %[csr], %[rs];" :: \
-    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
-              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
-              (state_id << MCX_SHAMT_STATE_ID) | \
-              (cxu_id   << MCX_SHAMT_CXU_ID)), \
-    [csr] "i" (CSR_MCX_SELECTOR));
 
 // CX FENCE
 #define CX_FENCE_SCALAR_READ(base_address, end_address)                                               \
@@ -64,12 +50,14 @@ void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width,
 void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
 {
     size_t vl;
-
+    cx_sel_t vec_sel[NUM_STATES];
+    for (int i = 0; i < NUM_STATES; i++) {
+        vec_sel[i] = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    }
     for (int i = 0; i < image_height; i+=1){
-        int cxu_id   = 1;
-        int state_id = GET_BITS(i, LOG2_NUM_STATES, 0);
-        MCX_SELECT(cxu_id, state_id);
 
+        cx_sel(vec_sel[GET_BITS(i, LOG2_NUM_STATES, 0)]);
+        
         asm volatile ("vsetvli x0, %[REQ_VL], e16, m2, ta, mu" :: [REQ_VL]  "r" (image_width));
         asm volatile ("vle32.v v4, (%0)":: "r"(rgb)); 
 
@@ -97,6 +85,10 @@ void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width,
         luma += image_width;
         rgb  += image_width;
     }
+    for (int i = 0; i < NUM_STATES; i++) {
+        cx_close(vec_sel[i]);
+    }
+    // cx_sel(CX_LEGACY);
 }
 
 static int benchmark_body (int  rpt);
@@ -110,7 +102,7 @@ void warm_caches (int  heat)
 
 int benchmark (void)
 {
-    return benchmark_body (LOCAL_SCALE_FACTOR * CPU_MHZ);
+    return benchmark_body (LOCAL_SCALE_FACTOR * 1);
 }
 
 
@@ -131,12 +123,7 @@ static int __attribute__ ((noinline)) benchmark_body (int rpt)
 void initialise_benchmark ()
 {
     // Enable CX
-    asm volatile ("csrw %[csr], %[rs];" :: \
-    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
-              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
-              (0  << MCX_SHAMT_STATE_ID) | \
-              (0  << MCX_SHAMT_CXU_ID)), \
-    [csr] "i" (CSR_MCX_SELECTOR));
+    cx_init();
 
     // Load data for each frame...
     for (int i = 0; i < IMG_H*IMG_W; ++i) {

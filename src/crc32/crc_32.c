@@ -17,6 +17,8 @@
 /* CRC - 32 BIT ANSI X3.66 CRC checksum files */
 
 #include "support.h"
+#include "../../../cx_runtime/include/ci.h"
+#include "../../../cx_runtime/zoo/crc32/crc32_common.h"
 
 /* This scale factor will be changed to equalise the runtime of the
    benchmarks. */
@@ -29,23 +31,6 @@
 #endif
 
 #define USE_CX 1
-
-// GENERAL CXU CONTROL
-#define CSR_MCX_SELECTOR 0xBC0
-#define CSR_CX_STATUS    0x801
-#define MCX_SHAMT_CXU_ID    0
-#define MCX_SHAMT_STATE_ID  16
-#define MCX_SHAMT_CXE       28
-#define MCX_SHAMT_VERSION   29
-
-#define MCX_SELECT(cxu_id, state_id) \
-    asm volatile ("csrw %[csr], %[rs];" :: \
-    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
-              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
-              (state_id << MCX_SHAMT_STATE_ID) | \
-              (cxu_id   << MCX_SHAMT_CXU_ID)), \
-    [csr] "i" (CSR_MCX_SELECTOR));
-    
 
 /**********************************************************************\
   |* Demonstration program to compute the 32-bit CRC used as the frame  *|
@@ -173,21 +158,20 @@ crc32pseudo ()
   int i;
   register DWORD oldcrc32;
   oldcrc32 = 0xFFFFFFFF;
-
+  cx_sel_t crc32_sel = cx_open(CX_GUID_CRC32, CX_NO_VIRT, -1);
+  cx_sel(crc32_sel);
 
   for (i = 0; i < 1024; ++i) 
   {
 	int rand = rand_beebs();
 #if USE_CX==1
-        int cxu_id = 0;
-        int state_id = 0;
-        MCX_SELECT(cxu_id, state_id);
-	asm volatile ("cx_reg 0,%0,%1,%2;\n" : "=r" (oldcrc32) : "r" (rand),"r" (oldcrc32));
+  oldcrc32 = CX_REG_HELPER(0, rand, oldcrc32);
 #else
         oldcrc32 = UPDC32(rand, oldcrc32);
 #endif
     }
-
+  cx_close(crc32_sel);
+  cx_sel(CX_LEGACY);
   return ~oldcrc32;
 }
 
@@ -195,12 +179,12 @@ void
 initialise_benchmark (void)
 {
     // Enable CX
-    asm volatile ("csrw %[csr], %[rs];" :: \
-    [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
-              (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
-              (0  << MCX_SHAMT_STATE_ID) | \
-              (0  << MCX_SHAMT_CXU_ID)), \
-    [csr] "i" (CSR_MCX_SELECTOR));
+    // asm volatile ("csrw %[csr], %[rs];" :: \
+    // [rs]  "r" ((1 << MCX_SHAMT_VERSION) |  /* enable muxing */ \
+    //           (0  << MCX_SHAMT_CXE) | /* disable exceptions */ \
+    //           (0  << MCX_SHAMT_STATE_ID) | \
+    //           (0  << MCX_SHAMT_CXU_ID)), \
+    // [csr] "i" (CSR_MCX_SELECTOR));
 }
 
 
@@ -227,7 +211,7 @@ benchmark_body (int rpt)
 {
   int i;
   DWORD r;
-
+  cx_init();
   for (i = 0; i < rpt; i++)
     {
       srand_beebs (0);
