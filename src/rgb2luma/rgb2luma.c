@@ -4,7 +4,6 @@
 //#include <stdio.h>
 #include "support.h"
 #include "../../../cx_runtime2.0/include/ci.h"
-// #include "../../../cx_runtime/zoo/vector/vector_common.h"
 #include <riscv_vector.h>
 #define USE_VECTOR 1
 
@@ -33,6 +32,8 @@
 #define VLEN 1024*4
 #define IMG_H VLEN/32
 #define IMG_W VLEN/32
+
+#define CX_GUID_VECTOR 1
 
 static volatile unsigned int in  [IMG_H*IMG_W];
 static volatile unsigned char out [IMG_H*IMG_W];
