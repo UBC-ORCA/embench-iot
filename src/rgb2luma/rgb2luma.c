@@ -3,8 +3,8 @@
 #include <stdlib.h>
 //#include <stdio.h>
 #include "support.h"
-#include "../../../cx_runtime/include/ci.h"
-#include "../../../cx_runtime/zoo/vector/vector_common.h"
+#include "../../../cx_runtime2.0/include/ci.h"
+// #include "../../../cx_runtime/zoo/vector/vector_common.h"
 #include <riscv_vector.h>
 #define USE_VECTOR 1
 
@@ -46,14 +46,11 @@ unsigned long xor() {
     return y;
 }
 
-void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height);
-void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height)
+void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height, cx_sel_t *vec_sel);
+void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width, const int32_t image_height, cx_sel_t *vec_sel)
 {
     size_t vl;
-    cx_sel_t vec_sel[NUM_STATES];
-    for (int i = 0; i < NUM_STATES; i++) {
-        vec_sel[i] = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
-    }
+    
     for (int i = 0; i < image_height; i+=1){
 
         cx_sel(vec_sel[GET_BITS(i, LOG2_NUM_STATES, 0)]);
@@ -85,10 +82,8 @@ void rgb2luma(unsigned char *luma, unsigned int *rgb, const int32_t image_width,
         luma += image_width;
         rgb  += image_width;
     }
-    for (int i = 0; i < NUM_STATES; i++) {
-        cx_close(vec_sel[i]);
-    }
-    // cx_sel(CX_LEGACY);
+
+    cx_sel(CX_LEGACY);
 }
 
 static int benchmark_body (int  rpt);
@@ -109,16 +104,22 @@ int benchmark (void)
 static int __attribute__ ((noinline)) benchmark_body (int rpt)
 {
     // Enable CX
-    cx_init();
     asm volatile ("fence rw, io");
     int i;
-
+    cx_select_t vec_sel[NUM_STATES];
+    for (i = 0; i < NUM_STATES; i++) {
+        vec_sel[i] = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    }
     for (i = 0; i < rpt; i++)
     {
-       rgb2luma(out, in, IMG_W, IMG_H);
+       rgb2luma(out, in, IMG_W, IMG_H, vec_sel);
     }
-        CX_FENCE_SCALAR_READ(&out[0], ((char*)(&out[IMG_H*IMG_W]))-1);
+    cx_sel(vec_sel[0]);
+    CX_FENCE_SCALAR_READ(&out[0], ((char*)(&out[IMG_H*IMG_W]))-1);
 
+    for (int i = 0; i < NUM_STATES; i++) {
+        cx_close(vec_sel[i]);
+    }
     return 0;
 }
 
